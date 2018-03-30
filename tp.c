@@ -39,55 +39,56 @@ slave* createSlaves(int numberOfSlaves){
 	pid_t auxPid;
 
 	slaves = (slave *) calloc(numberOfSlaves, sizeof(slave));
-	if (slaves == NULL){
+	if (slaves == NULL) {
 		perror("Couldn't allocate memory for slaves :( (Line 40)");
 			exit(1);
 	}
-	
-	for (i = 0; i < NUM_OF_SLAVES; i++){
+
+	for (i = 0; i < NUM_OF_SLAVES; i++) {
 		pipe(auxRead);
 		pipe(auxWrite);
 		slaves[i].readFd = auxRead[0];
 		slaves[i].writeFd = auxWrite[1];
+		fcntl(slaves[i].readFd, F_SETFL, O_NONBLOCK);
 		auxPid = fork();
 		//TODO: agustin rompe las pelotas por un switch
-		if (auxPid == -1){
+		if (auxPid == -1) {
 			perror("Slave fork() failed.");
 			abortProgram(&slaves);
 		}
-		else if (auxPid == 0){
+		else if (auxPid == 0) {
 			dup2(auxWrite[0], STDIN_FILENO);
 			dup2(auxRead[1], STDOUT_FILENO);
 			close(auxWrite[0]);
 			close(auxWrite[1]);
 			close(auxRead[0]);
 			close(auxRead[1]);
-			execvp("./slave.o", NULL);
+			execlp("./slave.o", "./slave.o" ,NULL);
 			perror("Slave process exec() failed.");
 			//(write)Avisarle a papa que me voy a pegar un corchazo
 			_exit(1);
-		} 
-		else{
+		}
+		else {
 			slaves[i].pid = auxPid;
 			close(auxWrite[0]);
 			close(auxRead[1]);
 		}
 
 	}
-	
+
 	return slaves;
 }
 
-void abortProgram(slave** slaves){
+void abortProgram(slave** slaves) {
 	int i;
-	for (i = 0; i < NUM_OF_SLAVES; i++){
+	for (i = 0; i < NUM_OF_SLAVES; i++) {
 		if (slaves[i]->pid != 0)
 			kill(slaves[i]->pid, SIGINT);
 	}
 	exit(1);
 }
 
-void stopSlave(slave* slave){
+void stopSlave(slave* slave) {
 	//write(slave->writeFd, STOP_CODE, STOP_CODE_LEN);
 }
 
