@@ -1,36 +1,36 @@
-#include "tp.h"
+#include "application.h"
 
-void md5(char * fileName); 
-
-int main(int argc, char ** argv)
-{
+int main(int argc, char ** argv) {
 	slave * slaves;
+	//int hashedFiles = 0;
+	//int currentArg = 0;
 
 	slaves = createSlaves(NUM_OF_SLAVES);
-	//startApplicationListener();
+
+	startApplicationListener(slaves);
 
 	// if (argc < 1){
 	// 	printf("Please specify a file or set of files to hash.\n");
 	// 	exit(EXIT_FAILURE);
 	// }
-	int hashedFiles = 0;
-	int currentArg = 0;
+	return 0;
 }
 
-// void startApplicationListener(){
-// 	// int msgLength;
-// 	// char message[30];
+void startApplicationListener(slave* slaves) {
+	char message[MAX_FILENAME + MD5_LENGTH + 3];
+	int i;
 
-// 	// while (1){
-// 	// 	for (int i = 0; i < NUM_OF_SLAVES; i++){
-// 	// 		if ((msgLength = read(slaves[i].readFd, message, 30)) != 0)
-// 	// 			printf("El hijo dijo %s\n", message);
-// 	// 	}
-		
-// 	// }
-// }
+ 	while(1) {
+		for (i = 0; i < NUM_OF_SLAVES; i++) {
+			if(readLine(&slaves[i], message)) {
+				reformatMd5Output(message);
+				printf("Hijo %d: %s\n", i,message);
+			}
+		}
+	}
+}
 
-slave* createSlaves(int numberOfSlaves){
+slave* createSlaves(int numberOfSlaves) {
 	slave* slaves;
 	int auxRead[2];
 	int auxWrite[2];
@@ -89,18 +89,31 @@ void abortProgram(slave** slaves) {
 }
 
 void stopSlave(slave* slave) {
-	//write(slave->writeFd, STOP_CODE, STOP_CODE_LEN);
+	char code = STOP_CODE;
+	write(slave->writeFd, &code, 1);
+	write(slave->writeFd, "\0", 1);
 }
 
-// void startChildListener(){
-// 	int messageLength;
-// 	char* message = malloc(30);
+int readLine(slave* slave, char * buffer) {
+	int messageLength = 0;
 
-// 	receivedLen = read(fd[0], message, 20);
-// 	while (strcmp(parentMessage, "enough") != 0){
-// 			int i = 0;
-// 			char c;
-// 			while ((messageLength = read(fd[0], parentMessage, 20)) == -1);
-// 			printf("%s\n", parentMessage);
-// 		}
-// }
+	while(read(slave->readFd, buffer, 1) > 0 && *buffer != '\n') {
+		buffer++;
+		messageLength++;
+	}
+
+	if(*buffer == '\n')
+		*buffer = '\0';
+
+	return messageLength > 0;
+}
+
+void reformatMd5Output(char * output) {
+	char hash[MD5_LENGTH + 3] = ": ";
+	char filename[MAX_FILENAME + MD5_LENGTH + 2];
+	strncpy(hash + 2, output, MD5_LENGTH);
+	hash[MD5_LENGTH + 3] = '\0';
+	strncpy(filename, (output + MD5_LENGTH + 2), MAX_FILENAME);
+	strcat(filename, hash);
+	strcpy(output, filename);
+}
