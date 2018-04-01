@@ -3,6 +3,11 @@
 int main(int argc, char ** argv) {
 	slave * slaves;
 
+	if (argc < 2){
+		printf("No files were specified to be hashed.\n");
+		exit(1);
+	}
+
 	char ** fileNames;
 	int numOfFiles;
 	struct stat statBuffer;
@@ -27,7 +32,7 @@ int main(int argc, char ** argv) {
 
 	slaves = createSlaves(NUM_OF_SLAVES);
 
-	startApplicationListener(slaves, fileNames, &numOfFiles);
+	startApplicationListener(slaves, fileNames, numOfFiles);
 	// if (argc < 1){
 	// 	printf("Please specify a file or set of files to hash.\n");
 	// 	exit(EXIT_FAILURE);
@@ -35,12 +40,29 @@ int main(int argc, char ** argv) {
 	return 0;
 }
 
-void startApplicationListener(slave* slaves, char** fileNames, int* numOfFiles) {
+void startApplicationListener(slave* slaves, char** fileNames, int numOfFiles) {
+	int hashedFiles;
+	hashedFiles = 0;
+	int slaveStates[NUM_OF_SLAVES];
+	for (int i = 0; i < NUM_OF_SLAVES; i++){
+		slaveStates[i] = STATE_IDLE;
+	}
 	char message[MAX_FILENAME + MD5_LENGTH + 3];
-	int i;
+	int i, j;
 
  	while(1) {
 		for (i = 0; i < NUM_OF_SLAVES; i++) {
+			if (slaveStates[i] == STATE_IDLE && hashedFiles < numOfFiles){
+				if (numOfFiles - hashedFiles >= BATCH_SIZE){
+					for (j = 0; j < BATCH_SIZE; j++)
+						write(slaves[i].writeFd, fileNames[hashedFiles + j], strlen(fileNames[hashedFiles + j]) + 1);
+					hashedFiles += 2;
+				} else {
+					//printf("%s\n", fileNames[hashedFiles]);
+					write(slaves[i].writeFd, fileNames[hashedFiles], strlen(fileNames[hashedFiles]) + 1);
+					hashedFiles++;
+				}
+			}
 			if(readLine(&slaves[i], message)) {
 				reformatMd5Output(message);
 				printf("Hijo %d: %s\n", i,message);
@@ -70,29 +92,27 @@ slave* createSlaves(int numberOfSlaves) {
 		slaves[i].writeFd = auxWrite[1];
 		fcntl(slaves[i].readFd, F_SETFL, O_NONBLOCK);
 		auxPid = fork();
-		//TODO: agustin rompe las pelotas por un switch
-		if (auxPid == -1) {
-			perror("Slave fork() failed.");
-			abortProgram(&slaves);
+		switch (auxPid) {
+			case -1:
+				perror("Slave fork() failed.");
+				abortProgram(&slaves);
+			case 0:
+				dup2(auxWrite[0], STDIN_FILENO);
+				dup2(auxRead[1], STDOUT_FILENO);
+				close(auxWrite[0]);
+				close(auxWrite[1]);
+				close(auxRead[0]);
+				close(auxRead[1]);
+				execlp("./slave.o", "./slave.o" ,NULL);
+				perror("Slave process exec() failed.");
+				//(write)Avisarle a papa que me voy a pegar un corchazo
+				_exit(1);
+			default:
+				slaves[i].pid = auxPid;
+				close(auxWrite[0]);
+				close(auxRead[1]);
+				break;
 		}
-		else if (auxPid == 0) {
-			dup2(auxWrite[0], STDIN_FILENO);
-			dup2(auxRead[1], STDOUT_FILENO);
-			close(auxWrite[0]);
-			close(auxWrite[1]);
-			close(auxRead[0]);
-			close(auxRead[1]);
-			execlp("./slave.o", "./slave.o" ,NULL);
-			perror("Slave process exec() failed.");
-			//(write)Avisarle a papa que me voy a pegar un corchazo
-			_exit(1);
-		}
-		else {
-			slaves[i].pid = auxPid;
-			close(auxWrite[0]);
-			close(auxRead[1]);
-		}
-
 	}
 
 	return slaves;

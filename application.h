@@ -16,6 +16,9 @@
 #define MAX_FILENAME 256
 #define MD5_LENGTH 32
 #define MEMORY_BLOCK 10
+#define BATCH_SIZE 2
+#define STATE_IDLE 0
+#define STATE_BUSY 1
 
 typedef struct {
 	pid_t pid;
@@ -25,7 +28,7 @@ typedef struct {
 } slave;
 
 slave* createSlaves(int numberOfSlaves);
-void startApplicationListener(slave* slaves, char** fileNames, int* numOfSlaves);
+void startApplicationListener(slave* slaves, char** fileNames, int numOfFiles);
 void abortProgram(slave** slaves);
 void stopSlave(slave* slave);
 int readLine(slave* slave, char * buffer);
