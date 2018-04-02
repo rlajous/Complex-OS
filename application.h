@@ -10,12 +10,12 @@
 #include <string.h>
 #include <signal.h>
 #include <fcntl.h>
+#include "fileListParser.h"
 
 #define NUM_OF_SLAVES 4
 #define STOP_CODE 5
 #define MAX_FILENAME 256
 #define MD5_LENGTH 32
-#define MEMORY_BLOCK 10
 #define BATCH_SIZE 2
 #define STATE_IDLE 0
 #define STATE_BUSY 1
@@ -27,15 +27,13 @@ typedef struct {
 	int remainingFiles;
 } slave;
 
-slave* createSlaves(int numberOfSlaves);
-void startApplicationListener(slave* slaves, char** fileNames, int numOfFiles);
-void abortProgram(slave** slaves);
+slave* createSlaves(int slaveQuantity);
+void distributeFiles(slave* slaves, char** files, int slaveQuantity, int* distributed, int fileQuantity);
+void slaveListener(slave* slaves, char** filenames, int slaveQuantity, int * finishedFiles);
+void abortProgram(slave* slaves, int slaveQuantity);
 void stopSlave(slave* slave);
+void stopSlaves(slave* slaves, int slaveQuantity);
 int readLine(slave* slave, char * buffer);
 void reformatMd5Output(char * output);
-void addFileToList(char* fileName, char** list, int* numOfFiles);
-void addDirectoryFilesToList(char* dirPath, char** fileNames, int* numOfFiles);
-int strEndsWithAsterix(char* str);
-void removeAsterixFromStr(char* str);
 
 #endif
