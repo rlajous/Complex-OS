@@ -159,7 +159,7 @@ void reformatMd5Output(char * output) {
 	char hash[MD5_LENGTH + 3] = ": ";
 	char filename[MAX_FILENAME + MD5_LENGTH + 2];
 	strncpy(hash + 2, output, MD5_LENGTH);
-	hash[MD5_LENGTH + 3] = '\0';
+	hash[MD5_LENGTH + 2] = '\0';
 	strncpy(filename, (output + MD5_LENGTH + 2), MAX_FILENAME);
 	strcat(filename, hash);
 	strcpy(output, filename);
