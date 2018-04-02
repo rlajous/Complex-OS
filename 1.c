@@ -1,53 +1,58 @@
-// Note: Link with -lrt
 
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <sys/mman.h>
-#include <sys/stat.h>        /* For mode constants */
-#include <fcntl.h>           /* For O_* constants */
-#include <unistd.h>
-#include <string.h>
 
-#include <assert.h>
+#define SHMSZ     27
 
-int main(int argc, char **argv) {
+int main(int argc, char ** argv) 
+{
+    char c;
+    int shmid;
+    key_t key;
+    char *shm, *s;
 
-	int oflags=O_RDWR;
-	int opt;
+    /*
+     * We'll name our shared memory segment
+     * "5678".
+     */
+    key = 5678;
 
-	 while ((opt = getopt(argc, argv, "c")) != -1) {
-		switch (opt) {
-		case 'c': /* create it */
-			oflags = O_RDWR | O_CREAT;
-			break;
-		default: /* '?' */
-			fprintf(stderr, "Usage: %s -[c]\n", argv[0]);
-			exit(EXIT_FAILURE);
-		}
-	}
+    /*
+     * Create the segment.
+     */
+    if ((shmid = shmget(key, SHMSZ, IPC_CREAT | 0666)) < 0) {
+        perror("shmget");
+        exit(1);
+    }
 
-	off_t   length = 2 * 1024;
-	char   *name   = "/malex";
-	int     fd = shm_open("/myregion", O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+    /*
+     * Now we attach the segment to our data space.
+     */
+    if ((shm = shmat(shmid, NULL, 0)) == (char *) -1) {
+        perror("shmat");
+        exit(1);
+    }
 
-	ftruncate(fd, length);
+    /*
+     * Now put some things into the memory for the
+     * other process to read.
+     */
+    s = shm;
 
-	fprintf(stderr,"Shared Mem Descriptor: fd=%d\n", fd);
+    for (c = 'a'; c <= 'z'; c++)
+        *s++ = c;
+    *s = NULL;
 
-	assert (fd>0);
+    /*
+     * Finally, we wait until the other process 
+     * changes the first character of our memory
+     * to '*', indicating that it has read what 
+     * we put there.
+     */
+    while (*shm != '*')
+        sleep(1);
 
-	u_char *ptr = (u_char *) mmap(NULL, length, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-
-	fprintf(stderr, "Shared Memory Address: %p [0..%lu]\n", ptr, length-1);
-	fprintf(stderr, "Shared Memory Path: /dev/shm/%s\n", name );
-
-	assert (ptr);
-
-	char *msg = "hello world!!\n";
-
-	strcpy((char*)ptr,msg);
-
-
-	close(fd);
-	exit(0);
+    exit(0);
 }
