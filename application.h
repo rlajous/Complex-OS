@@ -11,14 +11,13 @@
 #include <signal.h>
 #include <fcntl.h>
 #include "fileListParser.h"
+#include "sharedMemory.h"
 
 #define NUM_OF_SLAVES 4
 #define STOP_CODE 5
 #define MAX_FILENAME 256
 #define MD5_LENGTH 32
 #define BATCH_SIZE 2
-#define STATE_IDLE 0
-#define STATE_BUSY 1
 
 typedef struct {
 	pid_t pid;
@@ -28,11 +27,11 @@ typedef struct {
 } slave;
 
 slave* createSlaves(int slaveQuantity);
-void distributeFiles(slave* slaves, char** files, int slaveQuantity, int* distributed, int fileQuantity);
-void slaveListener(slave* slaves, char** filenames, int slaveQuantity, int * finishedFiles);
-void abortProgram(slave* slaves, int slaveQuantity);
+void distributeFiles(slave* slaves, char** files, int* distributed, int fileQuantity);
+void slaveListener(slave* slaves, char** filenames, int * finishedFiles, FILE * outputFile, int * sharedMemory, int * sharedMemoryIndex, int semaphoreId);
+void abortProgram(slave* slaves);
 void stopSlave(slave* slave);
-void stopSlaves(slave* slaves, int slaveQuantity);
+void stopSlaves(slave* slaves);
 int readLine(slave* slave, char * buffer);
 void reformatMd5Output(char * output);
 

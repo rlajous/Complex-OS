@@ -3,47 +3,84 @@
 int main(int argc, char ** argv) {
 	slave * slaves;
 	char ** filenames;
-	int slaveQuantity = NUM_OF_SLAVES;
-	int numOfFiles = 2;
+	int numOfFiles = 0;
 	int distributedFiles = 0;
 	int finishedFiles = 0;
+
+	FILE * outputFile;
+
+	int * sharedMemory;
+	int sharedMemoryIndex = 2;
+	int semaphoreId;
+	int sharedMemoryId;
+	key_t key = getpid();
 
 	if (argc < 2){
 		printf("No files were specified to be hashed.\n");
 		exit(1);
 	}
 
-	slaves = createSlaves(slaveQuantity);
+	outputFile = fopen("md5Hash.txt", "w");
+	if (outputFile == NULL) {
+		perror("File creation error.");
+		exit(1);
+	}
+
+	sharedMemory = generateSharedMemory(key, &sharedMemoryId);
+
+	sharedMemory[0] = 0;
+	sharedMemory[1] = 0;
+
+	semaphoreId = generateSemaphore(key);
+
+	initializeSemaphore(semaphoreId);
+
+	slaves = createSlaves(NUM_OF_SLAVES);
 
 	filenames = parseFileList(argc, argv, &numOfFiles);
 
 	while(distributedFiles != numOfFiles) {
-		distributeFiles(slaves, filenames, slaveQuantity, &distributedFiles, numOfFiles);
+		distributeFiles(slaves, filenames, &distributedFiles, numOfFiles);
 
-		slaveListener(slaves, filenames, slaveQuantity, &finishedFiles);
+		slaveListener(slaves, filenames, &finishedFiles, outputFile, sharedMemory, &sharedMemoryIndex, semaphoreId);
 	}
 
 	while(finishedFiles != numOfFiles) {
-		slaveListener(slaves, filenames, slaveQuantity, &finishedFiles);
+		slaveListener(slaves, filenames, &finishedFiles, outputFile, sharedMemory, &sharedMemoryIndex, semaphoreId);
 	}
 
-	stopSlaves(slaves, slaveQuantity);
+	changeSemaphore(semaphoreId, -1);
+	sharedMemory[1] = -1;
+	changeSemaphore(semaphoreId, 1);
 
+	stopSlaves(slaves);
+
+	fclose(outputFile);
 	free(slaves);
 	free(filenames);
 	return 0;
 }
 
-void slaveListener(slave* slaves, char** filenames, int slaveQuantity, int * finishedFiles) {
-	int i;
+void slaveListener(slave* slaves, char** filenames, int * finishedFiles, FILE * outputFile, int * sharedMemory, int * sharedMemoryIndex, int semaphoreId) {
+	int i, j;
 	char message[MAX_FILENAME + MD5_LENGTH + 3] = {0};
 
-	for (i = 0; i < slaveQuantity; i++) {
+	for (i = 0; i < NUM_OF_SLAVES; i++) {
 		if(readLine(&slaves[i], message)) {
 			reformatMd5Output(message);
+			fprintf(outputFile,"%s\n", message);
+
+			changeSemaphore(semaphoreId, -1);
+			j = 0;
+			while(message[j] != '\0') {
+				sharedMemory[(*sharedMemoryIndex)++] = message[j];
+				j++;
+			}
+			sharedMemory[(*sharedMemoryIndex)++] = '\0';
+			sharedMemory[0] = *sharedMemoryIndex;
+			changeSemaphore(semaphoreId, 1);
 			slaves[i].remainingFiles--;
 			(*finishedFiles)++;
-			printf("Hijo %d: %s\n", i,message);
 		}
 	}
 }
@@ -72,7 +109,7 @@ slave* createSlaves(int slaveQuantity) {
 		switch (auxPid) {
 			case -1:
 				perror("Slave fork() failed.");
-				abortProgram(slaves, slaveQuantity);
+				abortProgram(slaves);
 			case 0:
 				dup2(auxWrite[0], STDIN_FILENO);
 				dup2(auxRead[1], STDOUT_FILENO);
@@ -82,7 +119,6 @@ slave* createSlaves(int slaveQuantity) {
 				close(auxRead[1]);
 				execlp("./slave.o", "./slave.o" ,NULL);
 				perror("Slave process exec() failed.");
-				//(write)Avisarle a papa que me voy a pegar un corchazo
 				_exit(1);
 			default:
 				slaves[i].pid = auxPid;
@@ -95,15 +131,14 @@ slave* createSlaves(int slaveQuantity) {
 	return slaves;
 }
 
-void distributeFiles(slave* slaves, char** files, int slaveQuantity, int* distributed, int fileQuantity) {
+void distributeFiles(slave* slaves, char** files, int* distributed, int fileQuantity) {
 	int i, j;
 	char distributingBatch = 0;
 
-	for(i = 0; i < slaveQuantity; i++) {
+	for(i = 0; i < NUM_OF_SLAVES; i++) {
 		if(fileQuantity - *distributed > 0) {
 			for(j = 0; j < BATCH_SIZE && (fileQuantity - *distributed > 0); j++) {
 				if(slaves[i].remainingFiles == 0 || distributingBatch) {
-					//printf("File %s to slave %d\n", files[*distributed], i);
 					write(slaves[i].writeFd, files[*distributed], strlen(files[*distributed]) + 1);
 					(*distributed)++;
 					slaves[i].remainingFiles++;
@@ -117,9 +152,9 @@ void distributeFiles(slave* slaves, char** files, int slaveQuantity, int* distri
 	}
 }
 
-void abortProgram(slave* slaves, int slaveQuantity) {
+void abortProgram(slave* slaves) {
 	int i;
-	for (i = 0; i < slaveQuantity; i++) {
+	for (i = 0; i < NUM_OF_SLAVES; i++) {
 		if (slaves[i].pid != 0)
 			kill(slaves[i].pid, SIGINT);
 	}
@@ -133,9 +168,9 @@ void stopSlave(slave* slave) {
 	slave->pid = 0;
 }
 
-void stopSlaves(slave* slaves, int slaveQuantity) {
+void stopSlaves(slave* slaves) {
 	int i;
-	for (i = 0; i < slaveQuantity; i++) {
+	for (i = 0; i < NUM_OF_SLAVES; i++) {
 		if (slaves[i].pid != 0)
 			stopSlave(&slaves[i]);
 	}
