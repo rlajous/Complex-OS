@@ -37,9 +37,8 @@ int generateSemaphore(int key) {
 void initializeSemaphore(int semaphoreId) {
 	union semun sem;
 
-	sem.val = 0;
-	semctl(semaphoreId, 0, SETVAL, &sem);
-	changeSemaphore(semaphoreId, 1);
+	sem.val = 1;
+	semctl(semaphoreId, 0, SETVAL, sem);
 }
 
 void changeSemaphore(int semaphoreId, int change) {
