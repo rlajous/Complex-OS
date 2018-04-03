@@ -5,7 +5,7 @@ int * generateSharedMemory(int key, int* memoryId) {
 	int * memory;
 
 	//Read & Write Memory
-	*memoryId = shmget(key, sizeof(char) * SHMSIZE, 0606 | IPC_CREAT);
+	*memoryId = shmget(key, sizeof(int) * SHMSIZE, 0606 | IPC_CREAT);
 
 	if (*memoryId == -1) {
 		perror("Shared Memory creation error");
@@ -37,8 +37,9 @@ int generateSemaphore(int key) {
 void initializeSemaphore(int semaphoreId) {
 	union semun sem;
 
-	sem.val = 1;
+	sem.val = 0;
 	semctl(semaphoreId, 0, SETVAL, &sem);
+	changeSemaphore(semaphoreId, 1);
 }
 
 void changeSemaphore(int semaphoreId, int change) {
@@ -48,4 +49,8 @@ void changeSemaphore(int semaphoreId, int change) {
 	modification.sem_op = change;
 	modification.sem_flg = 0;
 	semop(semaphoreId, &modification, 1);
+}
+
+int verifySharedMemoryIndexBounds(int index) {
+	return index < SHMSIZE;
 }

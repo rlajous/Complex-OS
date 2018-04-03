@@ -72,12 +72,14 @@ void slaveListener(slave* slaves, char** filenames, int * finishedFiles, FILE * 
 
 			changeSemaphore(semaphoreId, -1);
 			j = 0;
-			while(message[j] != '\0') {
+			while(message[j] != '\0' && verifySharedMemoryIndexBounds(*sharedMemoryIndex)) {
 				sharedMemory[(*sharedMemoryIndex)++] = message[j];
 				j++;
 			}
-			sharedMemory[(*sharedMemoryIndex)++] = '\0';
-			sharedMemory[0] = *sharedMemoryIndex;
+			if(verifySharedMemoryIndexBounds(*sharedMemoryIndex)) {
+				sharedMemory[(*sharedMemoryIndex)++] = '\0';
+				sharedMemory[0] = *sharedMemoryIndex;
+			}
 			changeSemaphore(semaphoreId, 1);
 			slaves[i].remainingFiles--;
 			(*finishedFiles)++;

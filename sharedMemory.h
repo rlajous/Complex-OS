@@ -13,6 +13,7 @@ int * generateSharedMemory(int key, int* memoryId);
 int generateSemaphore(int key);
 void initializeSemaphore(int semaphoreId);
 void changeSemaphore(int semaphoreId, int change);
+int verifySharedMemoryIndexBounds(int index);
 
 //Semun definition from http://man7.org/linux/man-pages/man2/semctl.2.html
 
