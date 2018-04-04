@@ -12,8 +12,5 @@
 
 char ** parseFileList(int argc, char ** argv, int* numOfFiles);
 void addFileToList(char* fileName, char*** list, int* numOfFiles);
-void addDirectoryFilesToList(char* dirPath, char*** fileNames, int* numOfFiles);
-int strEndsWithAsterix(char* str);
-void removeAsterixFromStr(char* str);
 
 #endif
