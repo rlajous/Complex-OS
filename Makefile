@@ -19,6 +19,9 @@ FILE_PARSER_SOURCES=fileListParser.c
 SHARED_MEMORY=sharedMemory.o
 SHARED_MEMORY_SOURCES=sharedMemory.c
 
+TEST=test.out
+TEST_SOURCES=test.c
+
 all: $(SLAVE) $(APPLICATION) $(VIEW)
 
 $(SLAVE): $(SLAVE_SOURCES)
@@ -42,4 +45,9 @@ $(APPLICATION_LIB): $(APPLICATION_LIB_SOURCES)
 clean:
 	rm -rf *.o *.out
 
-.PHONY: all clean
+test: $(SLAVE) $(APPLICATION_LIB) $(TEST)
+
+$(TEST): $(TEST_SOURCES) $(APPLICATION_LIB) $(FILE_PARSER)
+	$(GCC) $(FLAGS) $(APPLICATION_LIB) $(FILE_PARSER) -o $(TEST)
+
+.PHONY: all clean test
