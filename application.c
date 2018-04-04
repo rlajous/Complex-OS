@@ -35,17 +35,16 @@ int main(int argc, char ** argv) {
 
 	initializeSemaphore(semaphoreId);
 
+	printf("This process pid is: %d\n",key);
+
 	slaves = createSlaves(NUM_OF_SLAVES);
 
 	filenames = parseFileList(argc, argv, &numOfFiles);
 
-	while(distributedFiles != numOfFiles) {
-		distributeFiles(slaves, filenames, &distributedFiles, numOfFiles);
-
-		slaveListener(slaves, filenames, &finishedFiles, outputFile, sharedMemory, &sharedMemoryIndex, semaphoreId);
-	}
-
 	while(finishedFiles != numOfFiles) {
+		if(distributedFiles != numOfFiles)
+			distributeFiles(slaves, filenames, &distributedFiles, numOfFiles);
+
 		slaveListener(slaves, filenames, &finishedFiles, outputFile, sharedMemory, &sharedMemoryIndex, semaphoreId);
 	}
 
@@ -55,6 +54,7 @@ int main(int argc, char ** argv) {
 
 	stopSlaves(slaves);
 
+	destroyMemory(sharedMemoryId, sharedMemory);
 	fclose(outputFile);
 	free(slaves);
 	free(filenames);

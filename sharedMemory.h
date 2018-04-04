@@ -14,6 +14,8 @@ int generateSemaphore(int key);
 void initializeSemaphore(int semaphoreId);
 void changeSemaphore(int semaphoreId, int change);
 int verifySharedMemoryIndexBounds(int index);
+void detachMemory(int * sharedMemory);
+void destroyMemory(int memoryId, int * sharedMemory);
 
 //Semun definition from http://man7.org/linux/man-pages/man2/semctl.2.html
 

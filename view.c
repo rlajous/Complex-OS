@@ -29,5 +29,6 @@ int main(int argc, char** argv) {
     changeSemaphore(semaphoreId, 1);
   }
 
+  detachMemory(sharedMemory);
   return 0;
 }

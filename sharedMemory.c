@@ -53,3 +53,12 @@ void changeSemaphore(int semaphoreId, int change) {
 int verifySharedMemoryIndexBounds(int index) {
 	return index < SHMSIZE;
 }
+
+void detachMemory(int * sharedMemory) {
+	shmdt(sharedMemory);
+}
+
+void destroyMemory(int memoryId, int * sharedMemory) {
+	detachMemory(sharedMemory);
+	shmctl(memoryId, IPC_RMID, NULL);
+}
