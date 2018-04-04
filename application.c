@@ -12,7 +12,7 @@ int main(int argc, char ** argv) {
 	FILE * outputFile;
 
 	char * sharedMemory;
-	int sharedMemoryIndex = 2;
+	int sharedMemoryIndex = 1;
 	int semaphoreId;
 	int sharedMemoryId;
 	key_t key = getpid();
@@ -32,11 +32,11 @@ int main(int argc, char ** argv) {
 	sharedMemory = generateSharedMemory(key, &sharedMemoryId);
 
 	sharedMemory[0] = 0;
-	sharedMemory[1] = 0;
 
 	semaphoreId = generateSemaphore(key);
 
 	initializeSemaphore(semaphoreId);
+	changeSemaphore(1, semaphoreId, -1);
 
 	printf("This process pid is: %d\n",key);
 	printf("To continue type 'y'\n");
@@ -53,13 +53,14 @@ int main(int argc, char ** argv) {
 		slaveListener(slaves, filenames, &finishedFiles, outputFile, sharedMemory, &sharedMemoryIndex, semaphoreId, &readFds, maxFd);
 	}
 
-	changeSemaphore(semaphoreId, -1);
-	sharedMemory[1] = -1;
-	changeSemaphore(semaphoreId, 1);
+	changeSemaphore(0, semaphoreId, -1);
+	sharedMemory[0] = -1;
+	changeSemaphore(0, semaphoreId, 1);
 
 	stopSlaves(slaves);
 
 	destroyMemory(sharedMemoryId, sharedMemory);
+	destroySemaphore(semaphoreId);
 	fclose(outputFile);
 	free(slaves);
 	free(filenames);
@@ -77,7 +78,7 @@ void slaveListener(slave* slaves, char** filenames, int * finishedFiles, FILE * 
 				reformatMd5Output(message);
 				fprintf(outputFile,"%s\n", message);
 
-				changeSemaphore(semaphoreId, -1);
+				changeSemaphore(0, semaphoreId, -1);
 				j = 0;
 				while(message[j] != '\0' && verifySharedMemoryIndexBounds(*sharedMemoryIndex)) {
 					sharedMemory[(*sharedMemoryIndex)++] = message[j];
@@ -85,9 +86,9 @@ void slaveListener(slave* slaves, char** filenames, int * finishedFiles, FILE * 
 				}
 				if(verifySharedMemoryIndexBounds(*sharedMemoryIndex)) {
 					sharedMemory[(*sharedMemoryIndex)++] = '\0';
-					sharedMemory[0] = *finishedFiles + 1;
 				}
-				changeSemaphore(semaphoreId, 1);
+				changeSemaphore(0, semaphoreId, 1);
+				changeSemaphore(1, semaphoreId, 1);
 				slaves[i].remainingFiles--;
 				(*finishedFiles)++;
 			}

@@ -7,8 +7,7 @@ int main(int argc, char** argv) {
 	int sharedMemoryId;
 	key_t key = atoi(argv[1]);
 
-  int index = 2;
-  int files = 0;
+  int index = 1;
   int running = 1;
   int c;
 
@@ -17,20 +16,19 @@ int main(int argc, char** argv) {
 	semaphoreId = generateSemaphore(key);
 
   while(running) {
-    changeSemaphore(semaphoreId, -1);
-    if(files < sharedMemory[0] || sharedMemory[1] != -1) {
-      if(files < sharedMemory[0]) {
-        while((c = sharedMemory[index++]) != '\0')
-          putchar(c);
-        files++;
-        putchar('\n');
-      }
+    changeSemaphore(1, semaphoreId, -1);
+    changeSemaphore(0, semaphoreId, -1);
+    if(sharedMemory[0] != -1) {
+      while((c = sharedMemory[index++]) != '\0')
+        putchar(c);
+      putchar('\n');
     }
     else
       running = 0;
-    changeSemaphore(semaphoreId, 1);
+    changeSemaphore(0, semaphoreId, 1);
   }
 
   detachMemory(sharedMemory);
+  destroySemaphore(semaphoreId);
   return 0;
 }

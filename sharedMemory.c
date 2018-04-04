@@ -25,7 +25,7 @@ int generateSemaphore(int key) {
 
 	int semaphoreId;
 
-	semaphoreId = semget (key, 1, 0606 | IPC_CREAT);
+	semaphoreId = semget (key, 2, 0606 | IPC_CREAT);
 
 	if (semaphoreId == -1) {
 		perror("Semaphore creation error");
@@ -39,15 +39,20 @@ void initializeSemaphore(int semaphoreId) {
 
 	sem.val = 1;
 	semctl(semaphoreId, 0, SETVAL, sem);
+	semctl(semaphoreId, 1, SETVAL, sem);
 }
 
-void changeSemaphore(int semaphoreId, int change) {
+void changeSemaphore(int semaphoreNum, int semaphoreId, int change) {
 
 	struct sembuf modification;
-	modification.sem_num = 0;
+	modification.sem_num = semaphoreNum;
 	modification.sem_op = change;
 	modification.sem_flg = 0;
 	semop(semaphoreId, &modification, 1);
+}
+
+int getSemaphoreValue(int semaphoreNum, int semaphoreId) {
+	return semctl(semaphoreId, semaphoreNum, GETVAL, NULL);
 }
 
 int verifySharedMemoryIndexBounds(int index) {
@@ -61,4 +66,9 @@ void detachMemory(char * sharedMemory) {
 void destroyMemory(int memoryId, char * sharedMemory) {
 	detachMemory(sharedMemory);
 	shmctl(memoryId, IPC_RMID, NULL);
+}
+
+void destroySemaphore(int semaphoreId) {
+	semctl(semaphoreId, 0, IPC_RMID, NULL);
+	semctl(semaphoreId, 1, IPC_RMID, NULL);
 }
