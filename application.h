@@ -26,9 +26,9 @@ typedef struct {
 	int remainingFiles;
 } slave;
 
-slave* createSlaves(int slaveQuantity);
+slave* createSlaves(int slaveQuantity, fd_set * readFds, int * maxfd);
 void distributeFiles(slave* slaves, char** files, int* distributed, int fileQuantity);
-void slaveListener(slave* slaves, char** filenames, int * finishedFiles, FILE * outputFile, int * sharedMemory, int * sharedMemoryIndex, int semaphoreId);
+void slaveListener(slave* slaves, char** filenames, int * finishedFiles, FILE * outputFile, int * sharedMemory, int * sharedMemoryIndex, int semaphoreId, fd_set * readFds, int maxFd);
 void abortProgram(slave* slaves);
 void stopSlave(slave* slave);
 void stopSlaves(slave* slaves);

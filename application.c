@@ -6,6 +6,8 @@ int main(int argc, char ** argv) {
 	int numOfFiles = 0;
 	int distributedFiles = 0;
 	int finishedFiles = 0;
+	fd_set readFds;
+	int maxFd;
 
 	FILE * outputFile;
 
@@ -14,6 +16,7 @@ int main(int argc, char ** argv) {
 	int semaphoreId;
 	int sharedMemoryId;
 	key_t key = getpid();
+	FD_ZERO(&readFds);
 
 	if (argc < 2){
 		printf("No files were specified to be hashed.\n");
@@ -37,7 +40,7 @@ int main(int argc, char ** argv) {
 
 	printf("This process pid is: %d\n",key);
 
-	slaves = createSlaves(NUM_OF_SLAVES);
+	slaves = createSlaves(NUM_OF_SLAVES, &readFds, &maxFd);
 
 	filenames = parseFileList(argc, argv, &numOfFiles);
 
@@ -45,7 +48,7 @@ int main(int argc, char ** argv) {
 		if(distributedFiles != numOfFiles)
 			distributeFiles(slaves, filenames, &distributedFiles, numOfFiles);
 
-		slaveListener(slaves, filenames, &finishedFiles, outputFile, sharedMemory, &sharedMemoryIndex, semaphoreId);
+		slaveListener(slaves, filenames, &finishedFiles, outputFile, sharedMemory, &sharedMemoryIndex, semaphoreId, &readFds, maxFd);
 	}
 
 	changeSemaphore(semaphoreId, -1);
@@ -61,39 +64,45 @@ int main(int argc, char ** argv) {
 	return 0;
 }
 
-void slaveListener(slave* slaves, char** filenames, int * finishedFiles, FILE * outputFile, int * sharedMemory, int * sharedMemoryIndex, int semaphoreId) {
+void slaveListener(slave* slaves, char** filenames, int * finishedFiles, FILE * outputFile, int * sharedMemory, int * sharedMemoryIndex, int semaphoreId, fd_set* readFds, int maxFd) {
 	int i, j;
 	char message[MAX_FILENAME + MD5_LENGTH + 3] = {0};
 
+	select(maxFd+1, readFds, NULL, NULL, NULL);
 	for (i = 0; i < NUM_OF_SLAVES; i++) {
-		if(readLine(&slaves[i], message)) {
-			reformatMd5Output(message);
-			fprintf(outputFile,"%s\n", message);
+		if(FD_ISSET(slaves[i].readFd, readFds)) {
+			if(readLine(&slaves[i], message)) {
+				reformatMd5Output(message);
+				fprintf(outputFile,"%s\n", message);
 
-			changeSemaphore(semaphoreId, -1);
-			j = 0;
-			while(message[j] != '\0' && verifySharedMemoryIndexBounds(*sharedMemoryIndex)) {
-				sharedMemory[(*sharedMemoryIndex)++] = message[j];
-				j++;
+				changeSemaphore(semaphoreId, -1);
+				j = 0;
+				while(message[j] != '\0' && verifySharedMemoryIndexBounds(*sharedMemoryIndex)) {
+					sharedMemory[(*sharedMemoryIndex)++] = message[j];
+					j++;
+				}
+				if(verifySharedMemoryIndexBounds(*sharedMemoryIndex)) {
+					sharedMemory[(*sharedMemoryIndex)++] = '\0';
+					sharedMemory[0] = *sharedMemoryIndex;
+				}
+				changeSemaphore(semaphoreId, 1);
+				slaves[i].remainingFiles--;
+				(*finishedFiles)++;
 			}
-			if(verifySharedMemoryIndexBounds(*sharedMemoryIndex)) {
-				sharedMemory[(*sharedMemoryIndex)++] = '\0';
-				sharedMemory[0] = *sharedMemoryIndex;
-			}
-			changeSemaphore(semaphoreId, 1);
-			slaves[i].remainingFiles--;
-			(*finishedFiles)++;
 		}
+		FD_SET(slaves[i].readFd, readFds);
 	}
 }
 
-slave* createSlaves(int slaveQuantity) {
+slave* createSlaves(int slaveQuantity, fd_set * readFds, int * maxFd) {
 	slave* slaves;
 	int auxRead[2];
 	int auxWrite[2];
 
 	int i;
 	pid_t auxPid;
+
+	*maxFd = 0;
 
 	slaves = (slave *) calloc(slaveQuantity, sizeof(slave));
 	if (slaves == NULL) {
@@ -104,9 +113,11 @@ slave* createSlaves(int slaveQuantity) {
 	for (i = 0; i < slaveQuantity; i++) {
 		pipe(auxRead);
 		pipe(auxWrite);
+		FD_SET(auxRead[0], readFds);
+		if(auxRead[0] > *maxFd)
+			*maxFd = auxRead[0];
 		slaves[i].readFd = auxRead[0];
 		slaves[i].writeFd = auxWrite[1];
-		fcntl(slaves[i].readFd, F_SETFL, O_NONBLOCK);
 		auxPid = fork();
 		switch (auxPid) {
 			case -1:
