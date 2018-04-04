@@ -1,135 +1,133 @@
-#include "testlib.h"
+#include "test.h"
 
 slave * slaves;
-char ** filenames;
+char ** filenames = NULL;
 int numOfFiles = 0;
 int distributedFiles = 0;
-int finishedFiles = 0;
 fd_set readFds;
 int maxFd;
 int numOfSlaves;
 
-FILE * outputFile;
-
-char * sharedMemory;
-int sharedMemoryIndex = 2;
-int semaphoreId;
-int sharedMemoryId;
-key_t key;
-FD_ZERO(&readFds);
+char message[MAX_FILENAME+ MD5_LENGTH +3] = {'\0'};
 
 int amountOfFiles;
-char ** inputfilenames;
+char * inputfilenames[2];
 
-int main()
-{
-	printf("Test sheared memory: ");
-	testShearedMemory();
+int main() {
 
-	printf("Test slaves: ");
-	testSlave();
+	printf("Test Slaves:\n");
 
-	printf("Test File Parser: ");
+	testSlaves();
+
+	printf("Test File Parser: \n");
+
 	testFileParser();
 }
 
+void testFileParser() {
 
-void testShearedMemory()
-{
+	givenArgvFiles();
 
-	givenAKey();
+	whenFilesParsedToString();
 
-	whenMemoryISCreated();
-	whenSemaphoreIsCreated();
-	whenOtherProcesWritesMemory();
+	thenCheckIsNotNull();
 
-	thenSomeMemoryIsWritten();
-	thenSemaphoreBlocksRW();
-	thenWriteInMemory();
+	thenCheckAreTheSameGiven();
 
-	thenSuccess();
-
+	thenFilesSuccess();
 
 }
 
+void testSlaves() {	
 
-void testSlaves()
-{
+	givenFiles();
 
 	givenAnAmountOfSlaves();
 
 	whenSlaveISCreated();
 
-	thenSlaveComunicationIsChecked();
-	/*
-	whenMemoryISCreated();
-	whenSemaphoreIsCreated();
-	whenOtherProcesWritesMemory();
+	thenSlavesAreSuccsesfullyCreated();
 
-	thenSomeMemoryIsWritten();
-	thenSemaphoreBlocksRW();
-	thenWriteInMemory();
-*/
+	thenSlaveComunicationIsChecked();
+	
 	thenSlaveSuccess();
 	
 }
 
 
-void testFileParser()
-{
+void givenAnAmountOfSlaves() {
 
-	givenFiles();
-
-	whenFilesParsedToString();
-
-	thenCheckAreTheSameGIven();
-	/*
-	whenMemoryISCreated();
-	whenSemaphoreIsCreated();
-	whenOtherProcesWritesMemory();
-
-	thenSomeMemoryIsWritten();
-	thenSemaphoreBlocksRW();
-	thenWriteInMemory();
-	*/
-	thenSuccess();
+	numOfSlaves=NUM_OF_SLAVES;
 
 }
 
-void givenAKey()
-{
-	key=1996;
+void whenSlaveISCreated() {
 
-}
+	FD_ZERO(&readFds);
 
-void whenMemoryISCreated()
-{
-	sharedMemory=generateSharedMemory(key, &sharedMemoryId);
-}
-
-void givenAnAmountOfSlaves()
-{
-	numOfSlaves=4;
-}
-
-void whenSlaveISCreated()
-{
 	slaves=createSlaves(numOfSlaves, &readFds, &maxFd);
+
 }
 
-void thenSlaveSuccess()
-{
+void thenSlaveSuccess() {
+
 	stopSlaves(slaves);
-}
 
-void thenSlaveComunicationIsChecked()
-{
+	free(slaves);
 
 }
-void givenFiles(){
+
+void thenSlaveComunicationIsChecked() {
 	
+	int i, count = 0;
+
+	distributeFiles(slaves,inputfilenames,&distributedFiles,amountOfFiles);
+	sleep(1);
+	select(maxFd+1, &readFds, NULL, NULL, NULL);
+	for (i = 0; i < NUM_OF_SLAVES; i++)  {
+		if(FD_ISSET(slaves[i].readFd, &readFds))  {
+			if(readLine(&slaves[i], message))  {
+				assert(*message != '\0');
+				count++;
+			}
+		}
+	}
+	assert(count == 1);
+	printf("Slave comunication is ok! :)\n");
+
 }
-void whenFilesParsedToString()
-{
-	filenames = parseFileList(numOfFiles, inputfilenames, &numOfFiles);
+void givenArgvFiles() {
+	amountOfFiles=2;
+	inputfilenames[1]="test.c";
+}
+
+void givenFiles() {
+	amountOfFiles=1;
+	inputfilenames[0]="test.c";
+}
+
+void whenFilesParsedToString() {
+	filenames = parseFileList(amountOfFiles, inputfilenames, &numOfFiles);
+}
+void thenCheckAreTheSameGiven() {
+	assert(strcmp(filenames[0],inputfilenames[1]) == 0);
+	printf("Chek if both are equal is ok! :)\n");
+}
+void thenSlavesAreSuccsesfullyCreated() {
+	int i;
+	assert(slaves != NULL);
+	for ( i = 0; i < NUM_OF_SLAVES; i++)
+	 {
+		assert(slaves[i].pid != 0);
+	}
+	printf("Slave creation is ok! :)\n");
+
+}
+void thenCheckIsNotNull() {
+	assert(filenames != NULL);
+	printf("Check if not NULL is ok! :)\n");
+}
+
+void thenFilesSuccess() {
+	free(filenames);
 }
