@@ -1,18 +1,18 @@
 #include "sharedMemory.h"
 
-int * generateSharedMemory(int key, int* memoryId) {
+char * generateSharedMemory(int key, int* memoryId) {
 
-	int * memory;
+	char * memory;
 
 	//Read & Write Memory
-	*memoryId = shmget(key, sizeof(int) * SHMSIZE, 0606 | IPC_CREAT);
+	*memoryId = shmget(key, sizeof(char) * SHMSIZE, 0606 | IPC_CREAT);
 
 	if (*memoryId == -1) {
 		perror("Shared Memory creation error");
 		exit(1);
 	}
 
-	memory = (int *) shmat(*memoryId, NULL, 0);
+	memory = (char *) shmat(*memoryId, NULL, 0);
 
 	if (memory == NULL) {
 		perror("Shared Memory creation error");
@@ -54,11 +54,11 @@ int verifySharedMemoryIndexBounds(int index) {
 	return index < SHMSIZE;
 }
 
-void detachMemory(int * sharedMemory) {
+void detachMemory(char * sharedMemory) {
 	shmdt(sharedMemory);
 }
 
-void destroyMemory(int memoryId, int * sharedMemory) {
+void destroyMemory(int memoryId, char * sharedMemory) {
 	detachMemory(sharedMemory);
 	shmctl(memoryId, IPC_RMID, NULL);
 }

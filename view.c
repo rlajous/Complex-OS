@@ -2,12 +2,13 @@
 
 int main(int argc, char** argv) {
 
-  int * sharedMemory;
+  char * sharedMemory;
 	int semaphoreId;
 	int sharedMemoryId;
 	key_t key = atoi(argv[1]);
 
   int index = 2;
+  int files = 0;
   int running = 1;
   int c;
 
@@ -17,10 +18,11 @@ int main(int argc, char** argv) {
 
   while(running) {
     changeSemaphore(semaphoreId, -1);
-    if(index < sharedMemory[0] || sharedMemory[1] != -1) {
-      if(index < sharedMemory[0]) {
+    if(files < sharedMemory[0] || sharedMemory[1] != -1) {
+      if(files < sharedMemory[0]) {
         while((c = sharedMemory[index++]) != '\0')
           putchar(c);
+        files++;
         putchar('\n');
       }
     }
