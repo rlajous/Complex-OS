@@ -24,6 +24,6 @@ int main(int argc, char ** argv) {
 
 void startSlaveListener(char * message) {
 	char command[7 + MAX_FILENAME] = "md5sum ";
-	strcat(command,message);
+	strcat(command, message);
 	system(command);
 }
