@@ -1,6 +1,6 @@
 #include "application.h"
 
-void slaveListener(slave* slaves, char** filenames, int * finishedFiles, FILE * outputFile, char * sharedMemory, int * sharedMemoryIndex, int semaphoreId, fd_set* readFds, int maxFd) {
+void slaveListener(slave * slaves, char ** filenames, int * finishedFiles, FILE * outputFile, char * sharedMemory, int * sharedMemoryIndex, int semaphoreId, fd_set * readFds, int maxFd) {
 	int i, j;
 	char message[MAX_FILENAME + MD5_LENGTH + 3] = {0};
 
@@ -80,7 +80,7 @@ slave* createSlaves(int slaveQuantity, fd_set * readFds, int * maxFd) {
 	return slaves;
 }
 
-void distributeFiles(slave* slaves, char** files, int* distributed, int fileQuantity) {
+void distributeFiles(slave * slaves, char ** files, int * distributed, int fileQuantity) {
 	int i, j;
 	char distributingBatch = 0;
 
@@ -101,7 +101,7 @@ void distributeFiles(slave* slaves, char** files, int* distributed, int fileQuan
 	}
 }
 
-void abortProgram(slave* slaves) {
+void abortProgram(slave * slaves) {
 	int i;
 	for (i = 0; i < NUM_OF_SLAVES; i++) {
 		if (slaves[i].pid != 0)
@@ -110,14 +110,14 @@ void abortProgram(slave* slaves) {
 	exit(1);
 }
 
-void stopSlave(slave* slave) {
+void stopSlave(slave * slave) {
 	char code = STOP_CODE;
 	write(slave->writeFd, &code, 1);
 	write(slave->writeFd, "\0", 1);
 	slave->pid = 0;
 }
 
-void stopSlaves(slave* slaves) {
+void stopSlaves(slave * slaves) {
 	int i;
 	for (i = 0; i < NUM_OF_SLAVES; i++) {
 		if (slaves[i].pid != 0)
@@ -125,7 +125,7 @@ void stopSlaves(slave* slaves) {
 	}
 }
 
-int readLine(slave* slave, char * buffer) {
+int readLine(slave * slave, char * buffer) {
 	int messageLength = 0;
 
 	while(read(slave->readFd, buffer, 1) > 0 && *buffer != '\n') {

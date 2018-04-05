@@ -10,7 +10,7 @@
 
 #define MEMORY_BLOCK 10
 
-char ** parseFileList(int argc, char ** argv, int* numOfFiles);
-void addFileToList(char* fileName, char*** list, int* numOfFiles);
+char ** parseFileList(int argc, char ** argv, int * numOfFiles);
+void addFileToList(char * fileName, char *** list, int * numOfFiles);
 
 #endif

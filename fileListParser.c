@@ -1,6 +1,6 @@
 #include "fileListParser.h"
 
-char ** parseFileList(int argc, char ** argv, int* numOfFiles) {
+char ** parseFileList(int argc, char ** argv, int * numOfFiles) {
 
 	char ** filenames;
 	*numOfFiles = 0;
@@ -23,7 +23,7 @@ char ** parseFileList(int argc, char ** argv, int* numOfFiles) {
 	return filenames;
 }
 
-void addFileToList(char* fileName, char*** list, int* numOfFiles) {
+void addFileToList(char * fileName, char *** list, int * numOfFiles) {
 	if (*numOfFiles % MEMORY_BLOCK == 0) {
 		*list = realloc(*list, sizeof(char*) * (*numOfFiles + MEMORY_BLOCK));
 		if (*list == NULL){

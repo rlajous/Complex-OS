@@ -9,7 +9,7 @@
 
 #define SHMSIZE 100000
 
-char * generateSharedMemory(int key, int* memoryId);
+char * generateSharedMemory(int key, int * memoryId);
 int generateSemaphore(int key);
 void initializeSemaphore(int semaphoreId);
 void changeSemaphore(int semaphoreNum, int semaphoreId, int change);
@@ -23,9 +23,9 @@ void destroySemaphore(int semaphoreId);
 
 union semun {
   int val;    /* Value for SETVAL */
-  struct semid_ds *buf;    /* Buffer for IPC_STAT, IPC_SET */
-  unsigned short  *array;  /* Array for GETALL, SETALL */
-  struct seminfo  *__buf;  /* Buffer for IPC_INFO
+  struct semid_ds * buf;    /* Buffer for IPC_STAT, IPC_SET */
+  unsigned short  * array;  /* Array for GETALL, SETALL */
+  struct seminfo  * __buf;  /* Buffer for IPC_INFO
  (Linux-specific) */
 };
 

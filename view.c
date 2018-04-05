@@ -1,6 +1,6 @@
 #include "sharedMemory.h"
 
-int main(int argc, char** argv) {
+int main(int argc, char ** argv) {
 
   char * sharedMemory;
 	int semaphoreId;
