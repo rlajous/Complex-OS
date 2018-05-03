@@ -9,6 +9,7 @@ GLOBAL int80Handler
 %include "./asm/macros.m"
 
 EXTERN irqDispatcher
+EXTERN tickHandler
 EXTERN sysCallHandler
 EXTERN sendEOI
 EXTERN runModule
@@ -16,7 +17,15 @@ EXTERN runModule
 section .text
 
 irq0Handler:
-	irqHandler 0
+	pushaq
+
+	mov rdi, rsp
+	call tickHandler
+	mov rsp, rax
+
+	call sendEOI
+	popaq
+	iretq
 
 irq1Handler:
 	irqHandler 1
