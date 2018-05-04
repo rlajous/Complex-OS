@@ -13,11 +13,14 @@ uint64_t scheduler(int ticks, uint64_t rsp){
 		nextRsp = algo;
 	}
 	return nextRsp;
+}*/
+
+int getPid() {
+ //TODO
+ return 0;
 }
 
-void createProcess
-
-
+/*
 int findFirstAvailableSpace(){
 	int i = 0;
 	while(i < MAX_PROCESES && process_t[i] != null){
