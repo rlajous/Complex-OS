@@ -1,10 +1,10 @@
 #include <buddyMemoryAllocator.h>
 
-static buddyHeap_t buddyHeap /*= (buddyHeap_t *) 0x600000*/;
+static buddyHeap_t buddyHeap;
 static int maxLevels = 0;
 
 //http://www.memorymanagement.org/mmref/alloc.html
-buddyHeap_t /***/ initializeHeap() {
+buddyHeap_t initializeHeap() {
   int i;
 
   buddyHeap.memoryBase[0] = base;

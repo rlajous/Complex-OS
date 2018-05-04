@@ -27,6 +27,5 @@ void * initializeKernelBinary();
 char** backupArguments(int argc, char * argv[]);
 void clearBSS(void * bssAddress, uint64_t bssSize);
 void * getStackBase();
-void * initializeKernelBinary();
 
 #endif

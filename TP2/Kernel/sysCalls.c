@@ -84,7 +84,7 @@ int sysExec(uint64_t filename, uint64_t argc, uint64_t argv) {
 }*/
 
 int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx) {
-	if(rdi < 0 || rdi >= SYSCALLS)
+	if(rdi >= SYSCALLS)
 		return -1;
 	return sysCalls[rdi](rsi, rdx, rcx);
 }
