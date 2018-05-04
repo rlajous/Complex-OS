@@ -7,7 +7,7 @@ void iSetHandler(int index, uint64_t handler);
 void sendEOI(int irq);
 void setupIDT();
 void irqDispatcher(int irq);
-void * tickHandler(void * rsp);
+uint64_t tickHandler(uint64_t rsp);
 
 extern void irq0Handler();
 extern void irq1Handler();

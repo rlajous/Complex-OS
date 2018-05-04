@@ -6,3 +6,7 @@
 *.o
 *.sys
 *.out
+
+TP2/cmake-build-debug/
+
+TP2/CMakeLists\.txt

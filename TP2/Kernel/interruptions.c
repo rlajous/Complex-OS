@@ -6,6 +6,7 @@
 #include <video.h>
 #include <sysCalls.h>
 #include <rtc.h>
+#include <scheduler.h>
 
 #pragma pack(push)
 #pragma pack(1)
@@ -26,20 +27,21 @@ typedef void (*handler_t)(void);
 
 static IDTEntry_t* IDT = (IDTEntry_t*) 0x0;
 
-void tickHandler() {
+uint64_t tickHandler(uint64_t rsp) {
 	static int count = 0;
+  uint64_t nextRsp;
 	count++;
+	//nextRsp = scheduler(count, rsp);
+	nextRsp = rsp;
 	if(count == 10) { //Cada 825ms
 		blinkCursor();
 		count = 0;
 	}
+	return nextRsp;
 }
 
 void irqDispatcher(int irq) {
 	switch(irq) {
-		case 0:
-			tickHandler();
-			break;
 		case 1:
 			keyboardHandler();
 			break;
