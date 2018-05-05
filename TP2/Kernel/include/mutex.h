@@ -4,7 +4,7 @@
 #include <scheduler.h>
 
 #define MAX_BLOCKED 10
-#define MAX_PROCESSES 10
+#define MAX_MUTEX_PROCESSES 10
 #define MAX_MUTEXES 50
 #define MAX_NAME 50
 
@@ -18,7 +18,7 @@ typedef struct {
     int creatorPid;
     char name[MAX_NAME];
     int blocked[MAX_BLOCKED];
-    int processes[MAX_PROCESSES];
+    int processes[MAX_MUTEX_PROCESSES];
     int value;
 } mutex_t;
 
@@ -32,4 +32,8 @@ int getNextMutexAvailable();
 
 void clearMutex(int mutex);
 
-#endif MUTEX_H
+void clearMutexArrays(int mutex);
+
+int nextListIndexAvailable(int mutex, int * list, int length);
+
+#endif
