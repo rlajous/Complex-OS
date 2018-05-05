@@ -2,20 +2,27 @@
 #define SCHEDULER_H
 
 #include <stdint.h>
+#include <process.h>
+#include <buddyMemoryAllocator.h>
 
-#define MAX_PROCESES = 10;
+#define MAX_PROCESSES 100
+#define PROCESS_LIMIT_REACHED -1
+#define FIRST_PROCESS -2
+#define QUANTUM 2
 
 typedef struct {
-    uint64_t rsp;
-    //processState
-    int pid;
-    //programCounter
-    //registers
-    //memoryLimits
-} process_t;
+  int next;
+  process_t * process;
+} roundRobinNode_t;
 
-uint64_t scheduler(int ticks, uint64_t rsp);
+void * schedule(void * rsp);
+
 int getPid();
+
+void addProcess(process_t* process);
+
+void removeProcess(process_t* process);
+
 int findFirstAvailableSpace();
 
 #endif

@@ -1,38 +1,86 @@
 #include <scheduler.h>
+#include <process.h>
 
-/*static process_t[MAX_PROCESSES] processes;
-static int nextPid = 1;
-static int firstAvailableSpace = 0;
-static int lastExecutedProcess = 0;
+static roundRobinNode_t processes[MAX_PROCESSES];
+static int firstAvailableSpace = FIRST_PROCESS;
+static int current = FIRST_PROCESS;
+static int quantum = QUANTUM;
 
-uint64_t scheduler(int ticks, uint64_t rsp){
-	static int quantum = 0;
-	uint64_t nextRsp = rsp;
-	//peek, if null exit
-	if(ticks == quantum){
-		nextRsp = algo;
-	}
-	return nextRsp;
-}*/
 
-int getPid() {
- //TODO
- return 0;
+void initializeScheduler() {
+  int i;
+  for(i = 0; i < MAX_PROCESSES; i++) {
+    processes[i].process = NULL;
+  }
 }
 
-/*
-int findFirstAvailableSpace(){
-	int i = 0;
-	while(i < MAX_PROCESES && process_t[i] != null){
-		i++;
+void * schedule(void * rsp) {
+  void * nextRsp = rsp;
+  quantum--;
+	if(quantum < 0){
+	  /*processes[current].process->stack = rsp;
+    current = processes[current].next;
+		nextRsp = processes[current].process->stack;*/
+	  quantum = QUANTUM;
 	}
-	return i <= MAX_PROCESES ? i : -1;
-}*/
+	return nextRsp;
+}
 
-//cuando algun modulo llame a exit llamar a esta mierda
-//crear la estructura del pcb
-// hacer una lista varialble con el memory alocator para cada vez que se crea un procesos meterlo en la cola por si vmaos a meter mil procesos (lo que podemoshacer es que el malloc cargue de a modulo 5 o alguna gilada asi no tiene que hacer el malloc que cosume su tiempo)
-//
+int getPid() {
+  return current == FIRST_PROCESS? -1 : processes[current].process->pid;
+}
 
+void addProcess(process_t* process) {
+  int next;
 
+  if(firstAvailableSpace != PROCESS_LIMIT_REACHED) {
+    if (current == FIRST_PROCESS) {
+      current = 0;
+      processes[current].next = current;
+      processes[current].process = process;
+    } else {
+      next = processes[current].next;
+      processes[current].next = firstAvailableSpace;
+      processes[firstAvailableSpace].process = process;
+      processes[firstAvailableSpace].next = next;
+    }
+    firstAvailableSpace = findFirstAvailableSpace();
+  }
+}
 
+void removeProcess(process_t *process) {
+  int previous = current;
+  int toRemove = processes[current].next;
+  int first = toRemove;
+
+  if(current == FIRST_PROCESS || process == NULL)
+    return;
+
+  if(previous == toRemove && processes[current].process->pid == process->pid) {
+    deleteProcess(processes[current].process);
+    processes[current].process = NULL;
+    current = FIRST_PROCESS;
+    return;
+  }
+
+  while(processes[toRemove].process->pid != process->pid) {
+    previous = toRemove;
+    toRemove = processes[toRemove].next;
+    if(toRemove == first)
+      return;
+  }
+
+  processes[previous].next = processes[toRemove].next;
+  deleteProcess(processes[toRemove].process);
+  processes[toRemove].process = NULL;
+  firstAvailableSpace = firstAvailableSpace > toRemove ? toRemove : firstAvailableSpace;
+}
+
+int findFirstAvailableSpace(){
+	int i;
+	for(i = 0; i < MAX_PROCESSES; i++) {
+	  if(processes[i].process == NULL)
+	    return i;
+	}
+	return PROCESS_LIMIT_REACHED;
+}
