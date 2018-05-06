@@ -35,7 +35,11 @@ int80Handler:
 
 	call sysCallHandler
 
+	mov [brax], rax
+
 	popaq
+
+	mov rax, [brax]
 	iretq
 
 sti:
@@ -51,3 +55,5 @@ setPicMaster:
 
 setPicSlave:
 	setPicMask 0xA1
+
+brax    resb 8

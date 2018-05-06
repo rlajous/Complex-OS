@@ -12,4 +12,6 @@ typedef struct {
 	char style;
 } cell_t;
 
+typedef int (*EntryPoint)(int argc, char *argv[]);
+
 #endif

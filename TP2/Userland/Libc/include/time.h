@@ -3,11 +3,23 @@
 
 #include <stdint.h>
 
+typedef struct {
+    int hours;
+    int minutes;
+    int seconds;
+} time;
+
+typedef struct {
+    int day;
+    int month;
+    int year;
+} date;
+
 extern int int80(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx); 
 
-void updateTime();
+void updateTime(time * currentTime);
 
-void updateDate();
+void updateDate(date * currentDate);
 
 int getHour();
 

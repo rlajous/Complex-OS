@@ -12,7 +12,7 @@
 #define NULL ((void *) 0)
 #endif
 
-static const uint64_t PageSize = 0x200000;
+static const uint64_t PageSize = 0x1000;
 extern uint8_t text;
 extern uint8_t rodata;
 extern uint8_t data;

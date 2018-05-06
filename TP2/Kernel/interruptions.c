@@ -76,6 +76,5 @@ void setupIDT() {
 	sysCallsSetup();
 	setupRTC();
 
-	setPicMaster(0xF8);
-	sti();
+	setPicMaster(0xFC);
 }
