@@ -13,5 +13,8 @@ size_t strlen(const char *str);
 char *cpuVendor(char *result);
 void writePort(uint8_t port, uint8_t value);
 int readPort(uint8_t port);
+void halt();
+void startFirstProcess();
+void yield();
 
 #endif

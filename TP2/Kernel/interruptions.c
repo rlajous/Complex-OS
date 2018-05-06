@@ -27,12 +27,12 @@ typedef void (*handler_t)(void);
 
 static IDTEntry_t* IDT = (IDTEntry_t*) 0x0;
 
-void * tickHandler(void * rsp) {
+void * tickHandler() {
   static int count = 0;
   void * nextRsp;
 
 	count++;
-	nextRsp = schedule(rsp);
+	nextRsp = schedule();
 
 	if(count == 10) { //Cada 825ms
 		blinkCursor();

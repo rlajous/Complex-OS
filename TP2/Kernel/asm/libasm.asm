@@ -1,6 +1,11 @@
 GLOBAL cpuVendor
 GLOBAL readPort
 GLOBAL writePort
+GLOBAL halt
+GLOBAL startFirstProcess
+
+EXTERN getCurrentStack
+EXTERN getEntryPoint
 
 %include "./asm/macros.m"
 
@@ -52,3 +57,23 @@ cpuVendor:
 	mov rsp, rbp
 	pop rbp
 	ret
+
+halt:
+    push rbp
+    mov rbp, rsp
+
+    hlt
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+startFirstProcess:
+    call getCurrentStack
+	mov rsp, rax
+
+	call getEntryPoint
+
+    push rax
+    sti
+    ret

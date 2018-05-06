@@ -5,29 +5,37 @@ static roundRobinNode_t processes[MAX_PROCESSES];
 static int firstAvailableSpace = FIRST_PROCESS;
 static int current = FIRST_PROCESS;
 static int quantum = QUANTUM;
+static void * schedulerAuxiliaryStack;
 
 
 void initializeScheduler() {
   int i;
+  schedulerAuxiliaryStack = allocatePages(1);
   for(i = 0; i < MAX_PROCESSES; i++) {
     processes[i].process = NULL;
   }
 }
 
-void * schedule(void * rsp) {
-  void * nextRsp = rsp;
-  quantum--;
-	if(quantum < 0){
-	  /*processes[current].process->stack = rsp;
-    current = processes[current].next;
-		nextRsp = processes[current].process->stack;*/
-	  quantum = QUANTUM;
+void * nextProcess() {
+  current = processes[current].next;
+  copyModule(processes[current].process->entryPoint);
+  quantum = QUANTUM;
+  return getCurrentStack();
+}
+
+void * schedule() {
+	if(quantum-- < 0){
+    return nextProcess();
 	}
-	return nextRsp;
+	return getCurrentStack();
 }
 
 int getPid() {
   return current == FIRST_PROCESS? -1 : processes[current].process->pid;
+}
+
+void * getCurrentStack() {
+  return processes[current].process->stack;
 }
 
 void addProcess(process_t* process) {
@@ -74,6 +82,10 @@ void removeProcess(process_t *process) {
   deleteProcess(processes[toRemove].process);
   processes[toRemove].process = NULL;
   firstAvailableSpace = firstAvailableSpace > toRemove ? toRemove : firstAvailableSpace;
+
+  if(current == toRemove) {
+    yield();
+  }
 }
 
 int findFirstAvailableSpace(){
@@ -83,4 +95,18 @@ int findFirstAvailableSpace(){
 	    return i;
 	}
 	return PROCESS_LIMIT_REACHED;
+}
+
+void * switchToKernelStack(void * rsp) {
+  processes[current].process->stack = rsp;
+  return (schedulerAuxiliaryStack + PAGE_SIZE - 1);
+}
+
+void * getEntryPoint() {
+  return processes[current].process->entryPoint;
+}
+
+void killCurrent() {
+  removeProcess(processes[current].process);
+  yield();
 }

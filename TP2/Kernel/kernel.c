@@ -7,13 +7,15 @@
 #include <terminal.h>
 #include <MMU.h>
 #include <buddyMemoryAllocator.h>
+#include <scheduler.h>
 
 int main(void) {
 	clearScreen();
-	setupIDT();
 	initializeHeap();
+	initializeScheduler();
+	setupIDT();
 
-	copyAndExecuteDefaultModule();
+	startSystem();
 
 	return 0;
 }

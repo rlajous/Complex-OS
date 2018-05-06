@@ -5,7 +5,6 @@
 #include <MMU.h>
 
 extern module_t modules[];
-extern int* moduleNumberPtr;
 
 #define SYSCALLS 10
 
@@ -46,7 +45,7 @@ int sysSetTimeZone(uint64_t timeZone, uint64_t rdx, uint64_t rcx) {
 	return 0;
 }
 
-int sysGetTime(uint64_t hour, uint64_t minute, uint64_t seconds) { /*Puede optimizarse*/
+int sysGetTime(uint64_t hour, uint64_t minute, uint64_t seconds) {
 	*(int*)hour = getTime(HOURS);
 	*(int*)minute = getTime(MINUTES);
 	*(int*)seconds = getTime(SECONDS);
@@ -70,7 +69,7 @@ int sysExec(uint64_t filename, uint64_t argc, uint64_t argv) {
 	while(modules[i].name != 0){
 		if(strcmp((const char *)filename, modules[i].name) == 0) {
 			argv = (uint64_t)backupArguments(argc, (char **)argv);
-			copyAndExecuteModule(i, argc, (char **)argv);
+      addModuleProcess(i, argc, (char **) argv);
 			return 0;
 		}
 		i++;

@@ -3,8 +3,10 @@
 
 #include <stdint.h>
 #include <buddyMemoryAllocator.h>
+#include <types.h>
 
 #define PROCESS_INITIAL_PAGES 2
+#define MAX_NAME 50
 
 typedef enum {RUNNING, READY, BLOCKED} processState;
 
@@ -14,6 +16,7 @@ typedef struct {
     void * memoryBase;
     processState state;
     int pid;
+    char name[MAX_NAME];
 } process_t;
 
 //Source RowDaBoat Wyrm
@@ -46,10 +49,12 @@ typedef struct {
     uint64_t base;
 } stackFrame_t;
 
-process_t * createProcess(void * entryPoint);
+process_t * createProcess(void * entryPoint, int argc, char * argv[], char * name);
 
 void deleteProcess(process_t * process);
 
-void * fillStackFrame(void * entryPoint, void * stack);
+void callProcess(int argc, char * argv[], void * entryPoint);
+
+void * fillStackFrame(void * entryPoint, void * stack, int argc, char * argv[]);
 
 #endif

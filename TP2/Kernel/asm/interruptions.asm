@@ -5,6 +5,7 @@ GLOBAL irq1Handler
 GLOBAL setPicMaster
 GLOBAL setPicSlave
 GLOBAL int80Handler
+GLOBAL yield
 
 %include "./asm/macros.m"
 
@@ -13,6 +14,8 @@ EXTERN tickHandler
 EXTERN sysCallHandler
 EXTERN sendEOI
 EXTERN runModule
+EXTERN switchToKernelStack
+EXTERN nextProcess
 
 section .text
 
@@ -20,8 +23,13 @@ irq0Handler:
 	pushaq
 
 	mov rdi, rsp
+	call switchToKernelStack
+	mov rsp, rax
+
 	call tickHandler
 	mov rsp, rax
+
+    mov rdi, 0
 
 	call sendEOI
 	popaq
@@ -55,5 +63,34 @@ setPicMaster:
 
 setPicSlave:
 	setPicMask 0xA1
+
+yield:
+	mov rax,rsp
+
+	push QWORD 0
+	push QWORD 0
+	push rax
+	pushfq
+	push QWORD 0x008
+	push .ret
+
+    jmp .next
+.ret:
+	ret
+
+.next:
+    pushaq
+
+    mov rdi, rsp
+    call switchToKernelStack
+    mov rsp, rax
+
+    call nextProcess
+    mov rsp, rax
+
+    mov rdi, 0
+    call sendEOI
+    popaq
+    iretq
 
 brax    resb 8

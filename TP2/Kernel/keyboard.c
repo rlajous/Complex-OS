@@ -4,6 +4,7 @@
 #include <lib.h>
 #include <scanCodes.h>
 #include <MMU.h>
+#include <scheduler.h>
 
 static uint8_t shiftMayus = 0;
 static uint8_t leftShift = FALSE;
@@ -43,6 +44,7 @@ void parseScanCode(uint8_t scanCode) {
 						if(ctrl && ch == 'c') {
 							/*sendEOI(1);
 							copyAndExecuteDefaultModule();*/
+							killCurrent();
 						}
 						else
 							writeBuffer(ch);

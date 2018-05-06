@@ -20,12 +20,24 @@ extern uint8_t bss;
 extern uint8_t endOfKernelBinary;
 extern uint8_t endOfKernel;
 
-void copyAndExecuteModule(int moduleIndex, int argc, char *argv[]);
-void copyAndExecuteDefaultModule();
+int init();
+
+void startSystem();
+
+void copyModule(void * moduleAddress);
+
+int getModule(void * moduleAddress);
+
+void addModuleProcess(int moduleIndex, int argc, char **argv);
+
 void * initializeKernelBinary();
+
 //void * malloc(uint64_t size);
+
 char** backupArguments(int argc, char * argv[]);
+
 void clearBSS(void * bssAddress, uint64_t bssSize);
+
 void * getStackBase();
 
 #endif

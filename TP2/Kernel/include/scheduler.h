@@ -15,14 +15,26 @@ typedef struct {
   process_t * process;
 } roundRobinNode_t;
 
-void * schedule(void * rsp);
+void initializeScheduler();
+
+void * nextProcess();
+
+void * schedule();
 
 int getPid();
+
+void * getCurrentStack();
 
 void addProcess(process_t* process);
 
 void removeProcess(process_t* process);
 
 int findFirstAvailableSpace();
+
+void * switchToKernelStack(void * rsp);
+
+void * getEntryPoint();
+
+void killCurrent();
 
 #endif
