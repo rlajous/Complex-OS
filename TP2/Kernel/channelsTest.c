@@ -1,10 +1,11 @@
 #include "channelsTest.h"
 #include "assert.h"
 
+//channelNode_t* firstChannel = NULL;
 char* channelId;
 char* testMessage;
 int incorrectPid;
-message_t* receivedMessage;
+messageNode_t* receivedMessage;
 
 int main() {
 	testChannelCreation();
@@ -12,10 +13,12 @@ int main() {
 	testSendMessages();
 
 	testReceiveMessages();
+
+	freeResources();
 }
 
 void testChannelCreation() {
-	printf("Test Channels...........");
+	printf("Test Channel creation...........");
 
 	whenAChannelIsCreatedOnEmptyList();
 
@@ -31,7 +34,7 @@ void testSendMessages(){
 
 	givenAMessage();
 
-	whenTheMessageIsSent():
+	whenTheMessageIsSent();
 
 	thenCheckMessageIsInList();
 
@@ -41,9 +44,11 @@ void testSendMessages(){
 void testReceiveMessages(){
 	printf("Test Receive...........");
 
-	whenTheMessageIsReceived():
+	whenTheMessageIsReceived();
 
 	thenCheckReceivedMessageIsNotNull();
+
+	thenCheckMessageContentIsCorrect();
 
 	thenCheckMessageIsNoLongerInList();
 
@@ -55,24 +60,28 @@ void whenTheMessageIsReceived(){
 }
 
 void thenCheckReceivedMessageIsNotNull(){
+	assert(receivedMessage != NULL);
+}
 
+void thenCheckMessageContentIsCorrect(){
+	assert(stringCompare(testMessage, receivedMessage->content) == 0);
 }
 
 void thenCheckMessageIsNoLongerInList(){
-
+	assert(getNextMessageForPid(getChannelFromList(channelId, firstChannel)->messages, getpid()) == NULL);
 }
 
 
 void givenAMessage(){
-	testMessage = "I don't feel so goos Mr Stark :s";
+	testMessage = "I don't feel so good Mr Stark :s";
 }
 
 void whenTheMessageIsSent(){
-	sendMessage(channelId, getpid(), testMessage, strlen(testMessage));
+	sendMessage(channelId, getpid(), testMessage, strlen(testMessage) + 1);
 }
 
 void thenCheckMessageIsInList(){
-	assert(getNextMessageForPid(getChannelFromList(channelId, firstChannel)->messages, int pid) != NULL);
+	assert(getNextMessageForPid(getChannelFromList(channelId, firstChannel)->messages, getpid()) != NULL);
 }
 
 
@@ -86,6 +95,12 @@ void thenCheckListNotNull(){
 
 void thenCheckTheChannelCanBeFoundWithID(){
 	assert(getChannelFromList(channelId, firstChannel)->channelId = channelId);
+}
+
+void freeResources(){
+	free(channelId);
+	free(receivedMessage);
+	free(firstChannel);
 }
 
 void thenSuccess(){

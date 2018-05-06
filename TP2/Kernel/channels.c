@@ -78,11 +78,38 @@ void addChannelToList(channelNode_t* newChannel, channelNode_t* listHead){
 		addChannelToList(newChannel, listHead->nextChannel);
 }
 
+// void removeChannelFromList(channelNode_t* channel, channelNode_t* listHead){
+// 	if (listHead == NULL || channel == NULL){
+// 		return;
+// 	}
+// 	else if (listHead->nextMessage == message){
+// 		checkpoint();
+// 		listHead->nextMessage = message->nextMessage;
+// 		free(message->content);
+// 		free(message);
+// 	} else{
+// 		removeMessageFromList(message, listHead->nextMessage);
+// 	}
+// }
+
 void addMessageToList(messageNode_t* newMessage, messageNode_t* listHead){
 	if (listHead->nextMessage == NULL)
 		listHead->nextMessage = newMessage;
 	else
 		addMessageToList(newMessage, listHead->nextMessage);
+}
+
+void removeMessageFromList(messageNode_t* message, messageNode_t* listHead){
+	if (listHead == NULL || message == NULL){
+		return;
+	}
+	else if (listHead->nextMessage == message){
+		listHead->nextMessage = message->nextMessage;
+		free(message->content);
+		free(message);
+	} else{
+		removeMessageFromList(message, listHead->nextMessage);
+	}
 }
 
 void addMessageToChannel(messageNode_t* newMessage, channelNode_t* channel){
@@ -95,12 +122,13 @@ void addMessageToChannel(messageNode_t* newMessage, channelNode_t* channel){
 }
 
 messageNode_t* getNextMessageForPid(messageNode_t* messageList, int pid){
-	if (messageList == NULL)
+	if (messageList == NULL){
 		return NULL;
-	else if (messageList->recipientPid == pid)
+	} else if (messageList->recipientPid == pid){
 		return messageList;
-	else
+	} else {
 		getNextMessageForPid(messageList->nextMessage, pid);
+	}
 	return NULL;
 }
 
@@ -110,6 +138,7 @@ char* createChannel(){
 	channelNode_t* newChannel = malloc(sizeof(channelNode_t));
 	newChannel->channelId = intToString(channelId);
 	newChannel->nextChannel = NULL;
+	newChannel->messages = NULL;
 	addChannelToList(newChannel, firstChannel);
 	return intToString(channelId);
 }
@@ -119,31 +148,34 @@ void sendMessage(char* channelId, int recipientPid, char* message, int length){
 	channelNode_t* channel;
 	newMessage = malloc(sizeof(messageNode_t));
 	newMessage->senderPid = getpid();
+	newMessage->recipientPid = recipientPid;
 	newMessage->length = length;
-	newMessage->content = malloc(length+1);
-	memcpy(newMessage->content, message, length+1);
+	newMessage->content = malloc(length);
+	newMessage->nextMessage = NULL;
+	memcpy(newMessage->content, message, length);
 	channel = getChannelFromList(channelId, firstChannel);
 	if (channel != NULL)
 		addMessageToChannel(newMessage, channel);
 	else
-		printf("Channel not found. Fucking piece of shit motherfucker.\n");
+		printf("Channel not found.\n");
 }
 
 messageNode_t* receiveMessage(char* channelId){
 	channelNode_t* channel = getChannelFromList(channelId, firstChannel);
-	messageNode_t* messages = channel->messages;
-	messageNode_t* result = getNextMessageForPid(messages, getpid());
+	messageNode_t* message = getNextMessageForPid(channel->messages, getpid());
+	messageNode_t* result = malloc(sizeof(messageNode_t));
+	memcpy(result, message, sizeof(messageNode_t));
+	result->content = malloc(message->length);
+	memcpy(result->content, message->content, message->length);
+	if (channel->messages == message){
+		channel->messages = NULL;
+		free(message->content);
+		free(message);
+	} else {
+		removeMessageFromList(message, channel->messages);
+	}
 	return result;
 }
-
-
-// int main(int argc, char** argv){
-// 	char* channelId;
-// 	channelId = createChannel();
-// 	printf("\n");
-// 	sendMessage(channelId, getpid(), "holaaaa", strlen("holaaaa")+1);
-// 	printf("Alles gut on zero: %d\n", stringCompare("hola", "hola"));
-// }
 
 
 
