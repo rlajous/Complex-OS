@@ -1,69 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h> 
+#include <channel.h>
 
-typedef struct messageNode{
-  int senderPid;
-  int recipientPid;
-  int length;
-  char* content;
-  struct messageNode* nextMessage;
-} messageNode_t;
+static channelNode_t* firstChannel = NULL;
+static int nextId = 0;
 
-typedef struct channelNode{
-  char* channelId;
-  messageNode_t* messages;
-  struct channelNode* nextChannel;
-} channelNode_t;
-
-channelNode_t* firstChannel = NULL;
-
-void checkpoint(){
-	static int id = 0;
-	printf("Checkpoint %d\n", id);
-	id++;
-}
-
-char * intToString(int n){
-	char* string;
-	int aux = n;
-	int numOfDigits = 1;
-	int divisor = 1;
-
-	while(aux /= 10)
-		numOfDigits++;
-	string = malloc(numOfDigits+1);
-
-	aux = n;
-	for (int j = 0; j < numOfDigits; j++){
-		divisor = 1;
-		for (int k = 1; k < numOfDigits-j; k++)
-			divisor *= 10;
-		string[j] = '0' + (int)(aux/divisor);
-		aux -= divisor * (int)(aux/divisor);
-	}
-	string[numOfDigits] = 0;
-	return string;
-}
-
-int stringCompare(char* a, char* b){
-	int i = 0;
-	while(a[i] != 0 || b[i] != 0){
-		if (a[i] > b[i])
-			return 1;
-		else if (a[i] < b[i])
-			return -1;
-		i++;
-	}
-	return 0;
-}
-
-channelNode_t* getChannelFromList(char* channelId, channelNode_t* listHead){
+channelNode_t* getChannelFromList(int channelId, channelNode_t* listHead){
 	channelNode_t* current = listHead;
 	if (listHead == NULL)
 		return NULL;
-	else if (!stringCompare(listHead->channelId, channelId))
+	else if (listHead->channelId == channelId)
 		return current;
 	else
 		return getChannelFromList(channelId, current->nextChannel);
@@ -105,8 +49,8 @@ void removeMessageFromList(messageNode_t* message, messageNode_t* listHead){
 	}
 	else if (listHead->nextMessage == message){
 		listHead->nextMessage = message->nextMessage;
-		free(message->content);
-		free(message);
+		freeMemory(message->content);
+    freeMemory(message);
 	} else{
 		removeMessageFromList(message, listHead->nextMessage);
 	}
@@ -132,45 +76,45 @@ messageNode_t* getNextMessageForPid(messageNode_t* messageList, int pid){
 	return NULL;
 }
 
-char* createChannel(){
-	static int channelId = 0;
-	channelId++;
-	channelNode_t* newChannel = malloc(sizeof(channelNode_t));
-	newChannel->channelId = intToString(channelId);
+int createChannel(){
+	channelNode_t* newChannel = allocateMemory(sizeof(channelNode_t));
+	newChannel->channelId = nextId++;
 	newChannel->nextChannel = NULL;
 	newChannel->messages = NULL;
 	addChannelToList(newChannel, firstChannel);
-	return intToString(channelId);
+	return newChannel->channelId;
 }
 
-void sendMessage(char* channelId, int recipientPid, char* message, int length){
+int sendMessage(int channelId, int recipientPid, char* message, int length){
 	messageNode_t* newMessage;
 	channelNode_t* channel;
-	newMessage = malloc(sizeof(messageNode_t));
+	newMessage = allocateMemory(sizeof(messageNode_t));
 	newMessage->senderPid = getpid();
 	newMessage->recipientPid = recipientPid;
 	newMessage->length = length;
-	newMessage->content = malloc(length);
+	newMessage->content = allocateMemory(length);
 	newMessage->nextMessage = NULL;
 	memcpy(newMessage->content, message, length);
 	channel = getChannelFromList(channelId, firstChannel);
-	if (channel != NULL)
+
+	if (channel != NULL) {
 		addMessageToChannel(newMessage, channel);
-	else
-		printf("Channel not found.\n");
+		return 0;
+	}
+	return SEND_MESSAGE_ERROR;
 }
 
-messageNode_t* receiveMessage(char* channelId){
+messageNode_t* receiveMessage(int channelId){
 	channelNode_t* channel = getChannelFromList(channelId, firstChannel);
 	messageNode_t* message = getNextMessageForPid(channel->messages, getpid());
-	messageNode_t* result = malloc(sizeof(messageNode_t));
+	messageNode_t* result = allocateMemory(sizeof(messageNode_t));
 	memcpy(result, message, sizeof(messageNode_t));
-	result->content = malloc(message->length);
+	result->content = allocateMemory(message->length);
 	memcpy(result->content, message->content, message->length);
 	if (channel->messages == message){
 		channel->messages = NULL;
-		free(message->content);
-		free(message);
+		freeMemory(message->content);
+		freeMemory(message);
 	} else {
 		removeMessageFromList(message, channel->messages);
 	}

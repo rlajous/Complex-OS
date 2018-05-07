@@ -21,7 +21,7 @@ void * nextProcess();
 
 void * schedule();
 
-int getPid();
+int getpid();
 
 void * getCurrentStack();
 

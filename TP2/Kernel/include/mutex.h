@@ -8,7 +8,6 @@
 #define MAX_MUTEXES 50
 #define MAX_NAME 50
 
-
 #define MUTEX_NOT_USED -1
 #define MUTEX_CREATION_ERROR -1
 #define FULL_LIST -2

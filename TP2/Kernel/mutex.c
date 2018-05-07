@@ -16,7 +16,7 @@ void setupMutexSystem() {
 int getMutex(char * name) {
   int i;
   int processIndex;
-  int pid = getPid();
+  int pid = getpid();
   int mutex = MUTEX_NOT_USED;
 
   for(i = 0; i < MAX_MUTEXES; i++) {
@@ -24,6 +24,7 @@ int getMutex(char * name) {
       mutex = i;
       processIndex = nextListIndexAvailable(mutex, mutexes[i].processes, MAX_PROCESSES);
       mutexes[mutex].processes[processIndex] = pid;
+      return mutex;
     }
   }
 

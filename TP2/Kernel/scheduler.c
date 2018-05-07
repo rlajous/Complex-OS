@@ -30,7 +30,7 @@ void * schedule() {
 	return getCurrentStack();
 }
 
-int getPid() {
+int getpid() {
   return current == FIRST_PROCESS? -1 : processes[current].process->pid;
 }
 

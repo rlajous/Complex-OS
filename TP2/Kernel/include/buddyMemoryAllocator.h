@@ -25,7 +25,7 @@ typedef struct {
 
 static void * const base = (void*)0x600000;
 
-buddyHeap_t /***/ initializeHeap();
+buddyHeap_t initializeHeap();
 void * allocatePages(int pages);
 void * allocateMemory(uint64_t bytes);
 void * getPages(int quantity);
