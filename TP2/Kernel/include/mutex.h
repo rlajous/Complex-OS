@@ -26,6 +26,8 @@ int getMutex(char * name, int pid);
 
 int createMutex(int pid, char * name);
 
+int releaseMutex(int pid, int mutex);
+
 int getNextMutexAvailable();
 
 void clearMutex(int mutex);

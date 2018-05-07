@@ -1,14 +1,7 @@
 #include <sysCalls.h>
-#include <terminal.h>
-#include <rtc.h>
-#include <lib.h>
-#include <MMU.h>
+
 
 extern module_t modules[];
-
-#define SYSCALLS 10
-
-typedef int (*sys)(uint64_t rsi, uint64_t rdx, uint64_t rcx);
 
 static sys sysCalls[SYSCALLS];
 
@@ -77,10 +70,46 @@ int sysExec(uint64_t filename, uint64_t argc, uint64_t argv) {
 	return -1;
 }
 
-/*int sysMalloc(uint64_t address, uint64_t size, uint64_t rcx) {
-	*((uint64_t *)address) = malloc(size);
+int sysKill(uint64_t pid, uint64_t rdx, uint64_t rcx) {
+	killProcess(pid);
 	return 0;
-}*/
+}
+
+int sysPs(uint64_t rsi, uint64_t rdx, uint64_t rcx) {
+	//TODO
+  return 0;
+}
+
+int sysGetPid(uint64_t rsi, uint64_t rdx, uint64_t rcx) {
+	return getpid();
+}
+
+int sysAllocateMemory(uint64_t address, uint64_t size, uint64_t rcx) {
+	*((uint64_t *)address) = (uint64_t)allocateMemory(size);
+	return 0;
+}
+
+int sysFreeMemory(uint64_t address, uint64_t rdx, uint64_t rcx) {
+	return freeMemory((void *)address);
+}
+
+int sysCreateMutex(uint64_t name, uint64_t rdx, uint64_t rcx) {
+	return getMutex((char *) name, getpid());
+}
+
+int sysReleaseMutex(uint64_t mutex, uint64_t rdx, uint64_t rcx) {
+	return releaseMutex(getpid(), (int)mutex);
+}
+
+int sysUpMutex(uint64_t mutex, uint64_t rdx, uint64_t rcx) {
+	mutexUp((int) mutex);
+	return 0;
+}
+
+int sysDownMutex(uint64_t mutex, uint64_t rdx, uint64_t rcx) {
+	mutexDown((int) mutex);
+	return 0;
+}
 
 int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx) {
 	if(rdi >= SYSCALLS)
@@ -96,6 +125,17 @@ void sysCallsSetup(){
 	sysCalls[4] = &sysGetTime;
 	sysCalls[5] = &sysGetDate;
 	sysCalls[6] = &sysEcho;
+
 	sysCalls[7] = &sysExec;
-	//sysCalls[8] = &sysMalloc;
+	sysCalls[8] = &sysKill;
+	sysCalls[9] = &sysPs;
+	sysCalls[10] = &sysGetPid;
+
+	sysCalls[11] = &sysAllocateMemory;
+	sysCalls[12] = &sysFreeMemory;
+
+	sysCalls[13] = &sysCreateMutex;
+	sysCalls[14] = &sysReleaseMutex;
+	sysCalls[15] = &sysUpMutex;
+	sysCalls[16] = &sysDownMutex;
 }

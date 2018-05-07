@@ -44,13 +44,18 @@ int createMutex(int pid, char * name) {
 }
 
 
-void removeMutex(int pid, int mutex) {
+int releaseMutex(int pid, int mutex) {
+  int released = 0;
 
   if(isValid(mutex)) {
     if (pid == mutexes[mutex].pid) {
       mutexes[mutex].pid = NOT_USED;
+      while(mutexes[mutex].blockedQuantity > 0)
+        unlockProcess(mutex);
+      released = 1;
     }
   }
+  return released;
 }
 
 int getNextMutexAvailable() {

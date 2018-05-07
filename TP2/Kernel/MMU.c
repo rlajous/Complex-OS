@@ -53,18 +53,6 @@ void addModuleProcess(int moduleIndex, int argc, char **argv) {
   yield();
 }
 
-/*void * malloc(uint64_t request) {
-  static uint64_t capacity = 0x200000;
-  static uint64_t size = 0;
-  uint64_t futureSize = size + request;
-  if(futureSize > capacity)
-    return 0;
-
-  uint64_t blockAddress = heapAddress + size;
-  size = futureSize;
-  return blockAddress;
-}*/
-
 char** backupArguments(int argc, char * argv[]) {
   char ** temp = argv;
   if(argc > 0) {
