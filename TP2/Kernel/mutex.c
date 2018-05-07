@@ -13,35 +13,29 @@ void setupMutexSystem() {
   }
 }
 
-int getMutex(char * name) {
+int getMutex(char * name, int pid) {
   int i;
-  int processIndex;
-  int pid = getpid();
-  int mutex = MUTEX_NOT_USED;
+  int mutex = NOT_USED;
 
   for(i = 0; i < MAX_MUTEXES; i++) {
-    if(!strcmp(mutexes[i].name, name) && mutexes[i].creatorPid != MUTEX_NOT_USED) {
-      mutex = i;
-      processIndex = nextListIndexAvailable(mutex, mutexes[i].processes, MAX_PROCESSES);
-      mutexes[mutex].processes[processIndex] = pid;
+    if(!strcmp(mutexes[i].name, name) && mutexes[i].pid != NOT_USED) {
       return mutex;
     }
   }
 
-  if(mutex == MUTEX_NOT_USED)
-    mutex = createMutex(pid, name);
+  mutex = createMutex(pid, name);
 
   return mutex;
 }
 
 int createMutex(int pid, char * name) {
   int mutex;
-  int length = strlen(name);
+  size_t length = strlen(name);
 
   if(usedMutexes < MAX_MUTEXES && length < MAX_NAME) {
     mutex = firstAvailableMutex;
     memcpy(mutexes[mutex].name, name, length);
-    mutexes[mutex].creatorPid = pid;
+    mutexes[mutex].pid = pid;
     usedMutexes++;
   } else
     mutex = MUTEX_CREATION_ERROR;
@@ -49,11 +43,21 @@ int createMutex(int pid, char * name) {
   return mutex;
 }
 
+
+void removeMutex(int pid, int mutex) {
+
+  if(isValid(mutex)) {
+    if (pid == mutexes[mutex].pid) {
+      mutexes[mutex].pid = NOT_USED;
+    }
+  }
+}
+
 int getNextMutexAvailable() {
   int i;
 
   for(i = 0; i < MAX_MUTEXES; i++) {
-    if(mutexes[i].creatorPid == MUTEX_NOT_USED){
+    if(mutexes[i].pid == NOT_USED){
       return i;
     }
   }
@@ -62,11 +66,17 @@ int getNextMutexAvailable() {
 }
 
 void clearMutex(int mutex) {
+  int i;
+
   if(mutex < MAX_MUTEXES) {
-    mutexes[mutex].creatorPid = MUTEX_NOT_USED;
-    clearMutexArrays(mutex);
+    mutexes[mutex].pid = NOT_USED;
     mutexes[mutex].name[0] = '\0';
     mutexes[mutex].value = 0;
+    mutexes[mutex].blockedQuantity = 0;
+
+    for(i = 0; i < MAX_BLOCKED; i++) {
+      mutexes[mutex].blocked[i] = NOT_USED;
+    }
 
     if(mutex < firstAvailableMutex)
       firstAvailableMutex = mutex;
@@ -75,26 +85,86 @@ void clearMutex(int mutex) {
   }
 }
 
-void clearMutexArrays(int mutex) {
-  int i;
-
-  for(i = 0; i < MAX_BLOCKED; i++) {
-    mutexes[mutex].blocked[i] = PID_NOT_USED;
-  }
-
-  for(i = 0; i < MAX_PROCESSES; i++) {
-    mutexes[mutex].processes[i] = PID_NOT_USED;
-  }
-}
-
-int nextListIndexAvailable(int mutex, int * list, int length) {
+int nextListIndexAvailable(int * list, int length) {
   int i;
 
   for(i = 0; i < length; i++){
-    if(list[i] == PID_NOT_USED){
+    if(list[i] == NOT_USED){
       return i;
     }
   }
 
   return FULL_LIST;
+}
+
+int addToBlocked(int mutex, int pid) {
+  int index;
+
+  index = nextListIndexAvailable(mutexes[mutex].blocked, MAX_BLOCKED);
+  if(index != FULL_LIST) {
+    mutexes[mutex].blocked[index] = pid;
+    mutexes[mutex].blockedQuantity++;
+  }
+
+  return index;
+}
+
+int isValid(int mutex) {
+  if(mutex < 0 || mutex >= MAX_MUTEXES)
+    return 0;
+
+  return mutexes[mutex].pid != NOT_USED;
+}
+
+void mutexDown(int mutex) {
+  int pid;
+  int lock;
+  int added;
+
+  if(isValid(mutex)) {
+    lock = testAndSetLock(&(mutexes[mutex].value));
+
+    if (lock != BLOCKED) {
+      pid = getpid();
+      added = addToBlocked(mutex, pid);
+
+      if (added != FULL_LIST) {
+        blockProcess(pid);
+      } else {
+        killProcess(pid);
+      }
+    }
+  }
+}
+
+void mutexUp(int mutex) {
+
+  int unlocked = 0;
+
+  if(isValid(mutex)) {
+    unlocked = unlockProcess(mutex);
+    if(unlocked == 0)
+      mutexes[mutex].value = 0;
+  }
+}
+
+int unlockProcess(int mutex) {
+  int i = 0;
+  int unlocked = 0;
+
+  if(mutexes[mutex].blockedQuantity == 0) {
+    return 0;
+  }
+
+  while(i < MAX_BLOCKED && !unlocked) {
+    if(mutexes[mutex].blocked[i] != NOT_USED) {
+      unblockProcess(mutexes[mutex].blocked[i]);
+      mutexes[mutex].blocked[i] = NOT_USED;
+      mutexes[mutex].blockedQuantity--;
+      unlocked = 1;
+    }
+    i++;
+  }
+
+  return unlocked;
 }

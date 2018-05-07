@@ -3,6 +3,7 @@ GLOBAL readPort
 GLOBAL writePort
 GLOBAL halt
 GLOBAL startFirstProcess
+GLOBAL testAndSetLock
 
 EXTERN getCurrentStack
 EXTERN getEntryPoint
@@ -76,4 +77,27 @@ startFirstProcess:
 
     push rax
     sti
+    ret
+
+;testAndSetLock(int * mutexLock)
+testAndSetLock:
+    push rbp
+    mov rbp, rsp
+
+    mov rax, 1
+
+    lock CMPXCHG [rdi], rdx
+
+    jnz .notAcquired
+
+    mov rax, 1
+    jmp .ret
+
+.notAcquired:
+    mov rax, 0
+    jmp .ret
+
+.ret:
+    mov rsp, rbp
+    pop rbp
     ret

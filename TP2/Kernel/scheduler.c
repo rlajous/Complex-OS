@@ -2,8 +2,9 @@
 #include <process.h>
 
 static roundRobinNode_t processes[MAX_PROCESSES];
-static int firstAvailableSpace = FIRST_PROCESS;
-static int current = FIRST_PROCESS;
+static int firstAvailableSpace = 0;
+static int current = 0;
+static int processQuantity = 0;
 static int quantum = QUANTUM;
 static void * schedulerAuxiliaryStack;
 
@@ -17,9 +18,20 @@ void initializeScheduler() {
 }
 
 void * nextProcess() {
-  current = processes[current].next;
+  int next = current;
+  int first = next;
+
+  if(processes[current].process != NULL)
+    processes[current].process->state = READY;
+
+  do {
+    next = processes[current].next;
+  } while(processes[next].process->state != READY && first != next);
+
+  current = next;
   copyModule(processes[current].process->entryPoint);
   quantum = QUANTUM;
+  processes[current].process->state = RUNNING;
   return getCurrentStack();
 }
 
@@ -31,7 +43,7 @@ void * schedule() {
 }
 
 int getpid() {
-  return current == FIRST_PROCESS? -1 : processes[current].process->pid;
+  return processQuantity == 0? -1 : processes[current].process->pid;
 }
 
 void * getCurrentStack() {
@@ -41,8 +53,8 @@ void * getCurrentStack() {
 void addProcess(process_t* process) {
   int next;
 
-  if(firstAvailableSpace != PROCESS_LIMIT_REACHED) {
-    if (current == FIRST_PROCESS) {
+  if(processQuantity != MAX_PROCESSES) {
+    if (processQuantity == 0) {
       current = 0;
       processes[current].next = current;
       processes[current].process = process;
@@ -53,6 +65,7 @@ void addProcess(process_t* process) {
       processes[firstAvailableSpace].next = next;
     }
     firstAvailableSpace = findFirstAvailableSpace();
+    processQuantity++;
   }
 }
 
@@ -61,13 +74,14 @@ void removeProcess(process_t *process) {
   int toRemove = processes[current].next;
   int first = toRemove;
 
-  if(current == FIRST_PROCESS || process == NULL)
+  if(processQuantity == 0 || process == NULL)
     return;
 
   if(previous == toRemove && processes[current].process->pid == process->pid) {
     deleteProcess(processes[current].process);
     processes[current].process = NULL;
-    current = FIRST_PROCESS;
+    current = 0;
+    processQuantity--;
     return;
   }
 
@@ -81,6 +95,7 @@ void removeProcess(process_t *process) {
   processes[previous].next = processes[toRemove].next;
   deleteProcess(processes[toRemove].process);
   processes[toRemove].process = NULL;
+  processQuantity--;
   firstAvailableSpace = firstAvailableSpace > toRemove ? toRemove : firstAvailableSpace;
 
   if(current == toRemove) {
@@ -109,4 +124,43 @@ void * getEntryPoint() {
 void killCurrent() {
   removeProcess(processes[current].process);
   yield();
+}
+
+void killProcess(int pid) {
+  int index = getProcessIndex(pid);
+
+  if(index != PID_NOT_FOUND) {
+    removeProcess(processes[index].process);
+    yield();
+  }
+}
+
+int getProcessIndex(int pid) {
+  int i = 0;
+  int next = current;
+
+  while(i < processQuantity) {
+    if(processes[next].process->pid == pid)
+      return next;
+
+    next = processes[next].next;
+    i++;
+  }
+  return PID_NOT_FOUND;
+}
+
+void blockProcess(int pid) {
+  int index = getProcessIndex(pid);
+
+  if(index != PID_NOT_FOUND) {
+    processes[index].process->state = BLOCKED;
+    yield();
+  }
+}
+
+void unblockProcess(int pid) {
+  int index = getProcessIndex(pid);
+
+  if(index != PID_NOT_FOUND)
+    processes[index].process->state = READY;
 }

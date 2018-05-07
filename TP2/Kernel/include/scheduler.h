@@ -7,7 +7,7 @@
 
 #define MAX_PROCESSES 100
 #define PROCESS_LIMIT_REACHED -1
-#define FIRST_PROCESS -2
+#define PID_NOT_FOUND -1
 #define QUANTUM 2
 
 typedef struct {
@@ -36,5 +36,13 @@ void * switchToKernelStack(void * rsp);
 void * getEntryPoint();
 
 void killCurrent();
+
+void killProcess(int pid);
+
+int getProcessIndex(int pid);
+
+void blockProcess(int pid);
+
+void unblockProcess(int pid);
 
 #endif

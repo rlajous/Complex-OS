@@ -15,6 +15,7 @@ void writePort(uint8_t port, uint8_t value);
 int readPort(uint8_t port);
 void halt();
 void startFirstProcess();
+int testAndSetLock(int * mutexLock);
 void yield();
 
 #endif
