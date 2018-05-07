@@ -7,20 +7,20 @@
 #define SEND_MESSAGE_ERROR -1
 
 typedef struct messageNode{
-    int senderPid;
-    int recipientPid;
     int length;
     char* content;
     struct messageNode* nextMessage;
 } messageNode_t;
 
 typedef struct channelNode{
-    int channelId;
-    messageNode_t* messages;
+    int senderPid;
+    int recipientPid;
+    messageNode_t* senderToRecipient;
+    messageNode_t* recipientToSender;
     struct channelNode* nextChannel;
 } channelNode_t;
 
-channelNode_t* getChannelFromList(int channelId, channelNode_t* listHead);
+channelNode_t* getChannelFromList(int recipientPid, channelNode_t* listHead);
 
 void addChannelToList(channelNode_t* newChannel, channelNode_t* listHead);
 
@@ -28,16 +28,16 @@ void removeChannelFromList(channelNode_t* channel, channelNode_t* listHead);
 
 void addMessageToList(messageNode_t* newMessage, messageNode_t* listHead);
 
-void removeMessageFromList(messageNode_t* message, messageNode_t* listHead);
+void removeMessageFromList(messageNode_t* message, messageNode_t* listHead)
 
-void addMessageToChannel(messageNode_t* newMessage, channelNode_t* channel);
+void addMessageToChannel(messageNode_t* newMessage, channelNode_t* channel, int recipientPid);
 
-messageNode_t* getNextMessageForPid(messageNode_t* messageList, int pid);
+messageNode_t* getNextMessageForPid(channelNode_t* channel, int pid);
 
-int createChannel();
+int createChannel(int pid1);
 
-int sendMessage(int channelId, int recipientPid, char* message, int length);
+int sendMessage(int recipientPid, char* message, int length);
 
-messageNode_t* receiveMessage(int channelId);
+messageNode_t* receiveMessage(int pid);
 
 #endif
