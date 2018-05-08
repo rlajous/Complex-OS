@@ -107,7 +107,7 @@ int sysUpMutex(uint64_t mutex, uint64_t rdx, uint64_t rcx) {
 }
 
 int sysDownMutex(uint64_t mutex, uint64_t rdx, uint64_t rcx) {
-	mutexDown((int) mutex);
+	mutexDown((int) mutex, getpid());
 	return 0;
 }
 

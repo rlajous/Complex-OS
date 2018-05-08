@@ -38,7 +38,7 @@ int addToBlocked(int mutex, int pid);
 
 int isValid(int mutex);
 
-void mutexDown(int mutex);
+void mutexDown(int mutex, int pid);
 
 void mutexUp(int mutex);
 

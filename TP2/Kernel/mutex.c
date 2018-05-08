@@ -121,8 +121,7 @@ int isValid(int mutex) {
   return mutexes[mutex].pid != NOT_USED;
 }
 
-void mutexDown(int mutex) {
-  int pid;
+void mutexDown(int mutex, int pid) {
   int lock;
   int added;
 
@@ -130,7 +129,6 @@ void mutexDown(int mutex) {
     lock = testAndSetLock(&(mutexes[mutex].value));
 
     if (lock != BLOCKED) {
-      pid = getpid();
       added = addToBlocked(mutex, pid);
 
       if (added != FULL_LIST) {
