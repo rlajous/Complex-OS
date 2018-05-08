@@ -100,21 +100,30 @@ messageNode_t* getNextMessageForPid(channelNode_t* channel, int pid){
 }
 
 channelNode_t * createChannel(int senderPid, int recipientPid){
-	channelNode_t* newChannel = (channelNode_t*) allocateMemory(sizeof(channelNode_t));
+  channelNode_t* newChannel = getChannelFromList(senderPid, recipientPid);
+  if(newChannel != NULL)
+    return newChannel;
+
+	newChannel = (channelNode_t*) allocateMemory(sizeof(channelNode_t));
 	char senderMutexName[50];
 	char recipientMutexName[50];
+
 	if(newChannel != NULL) {
     newChannel->senderPid = senderPid;
     newChannel->recipientPid = recipientPid;
     newChannel->nextChannel = NULL;
+
     newChannel->senderToRecipient = NULL;
     newChannel->recipientToSender = NULL;
+
     generateChannelMutexName(senderPid, recipientPid, senderMutexName);
     generateChannelMutexName(recipientPid, senderPid, recipientMutexName);
     newChannel->senderMutex = createMutex(senderPid, senderMutexName);
 		newChannel->recipientMutex = createMutex(senderPid, recipientMutexName);
+
 		mutexDown(newChannel->senderMutex, -1);
 		mutexDown(newChannel->recipientMutex, -1);
+
     addChannelToList(newChannel);
   }
 	return newChannel;
@@ -183,7 +192,7 @@ char * receiveMessage(int pid, int length) {
 		message = getNextMessageForPid(channel, recipientPid);
 		if(message != NULL) {
 			resultLength = length > message->length ? message->length: length;
-			result = allocateMemory(resultLength);
+			result = allocateMemory(length);
 			memcpy(result, message->content, resultLength);
 			if(message->nextMessage == NULL)
 				lockRecieve(recipientPid, channel);

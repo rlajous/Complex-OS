@@ -9,8 +9,9 @@
 #include <process.h>
 #include <mutex.h>
 #include <buddyMemoryAllocator.h>
+#include <channel.h>
 
-#define SYSCALLS 17
+#define SYSCALLS 21
 
 typedef int (*sys)(uint64_t rsi, uint64_t rdx, uint64_t rcx);
 
@@ -45,6 +46,14 @@ int sysReleaseMutex(uint64_t mutex, uint64_t rdx, uint64_t rcx);
 int sysUpMutex(uint64_t rsi, uint64_t rdx, uint64_t rcx);
 
 int sysDownMutex(uint64_t rsi, uint64_t rdx, uint64_t rcx);
+
+int sysCreateChannel(uint64_t rsi, uint64_t rdx, uint64_t rcx);
+
+int sysSend(uint64_t rsi, uint64_t rdx, uint64_t rcx);
+
+int sysReceive(uint64_t rsi, uint64_t rdx, uint64_t rcx);
+
+int sysDeleteChannel(uint64_t rsi, uint64_t rdx, uint64_t rcx);
 
 int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx);
 

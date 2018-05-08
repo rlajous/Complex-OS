@@ -111,6 +111,34 @@ int sysDownMutex(uint64_t mutex, uint64_t rdx, uint64_t rcx) {
 	return 0;
 }
 
+int sysCreateChannel(uint64_t recipientPid, uint64_t rdx, uint64_t rcx) {
+	if(createChannel(getpid(), (int)recipientPid) == NULL)
+		return -1;
+	return 0;
+}
+
+int sysSend(uint64_t recipientPid, uint64_t message, uint64_t length) {
+	return sendMessage((int)recipientPid, (char *) message, (int)length);
+}
+
+int sysReceive(uint64_t senderPid, uint64_t buffer, uint64_t length) {
+  char * result = receiveMessage((int) senderPid, (int)length);
+  if(result != NULL) {
+    memcpy((char *) buffer, result, length);
+    freeMemory(result);
+    return 0;
+  }
+	return -1;
+}
+
+int sysDeleteChannel(uint64_t recipientPid, uint64_t rdx, uint64_t rcx) {
+  channelNode_t * channel;
+  channel = getChannelFromList((int)recipientPid, getpid());
+  if(channel != NULL)
+    deleteChannel(channel);
+	return 0;
+}
+
 int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx) {
 	if(rdi >= SYSCALLS)
 		return -1;
@@ -138,4 +166,9 @@ void sysCallsSetup(){
 	sysCalls[14] = &sysReleaseMutex;
 	sysCalls[15] = &sysUpMutex;
 	sysCalls[16] = &sysDownMutex;
+
+	sysCalls[17] = &sysCreateChannel;
+	sysCalls[18] = &sysSend;
+	sysCalls[19] = &sysReceive;
+	sysCalls[20] = &sysDeleteChannel;
 }
