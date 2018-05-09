@@ -164,3 +164,64 @@ void unblockProcess(int pid) {
   if(index != PID_NOT_FOUND)
     processes[index].process->state = READY;
 }
+
+void getProcesses(char * buffer, int size) {
+  int i,j = 0;
+  int length;
+  int k = current;
+
+  for(i = 0; i < processQuantity; i++) {
+      if(size > 0) {
+        memcpy(buffer + j, "pid: ", 5);
+        j += 5;
+        size -= 5;
+      }
+
+      if(size > 0) {
+        length = uintToBase(processes[k].process->pid, buffer + j, 10);
+        j += length;
+        size -= length;
+      }
+
+      if(size > 0) {
+        memcpy(buffer + j, ", Name: ", 8);
+        j += 8;
+        size -= 8;
+      }
+
+      if(size > 0) {
+        length = strlen(processes[k].process->name);
+        memcpy(buffer + j, processes[k].process->name, length);
+        j += length;
+        size -= length;
+      }
+
+      if(size > 0) {
+        memcpy(buffer + j, ", Status: ", 10);
+        j += 10;
+        size -= 10;
+      }
+
+      if(size > 0) {
+        char * state;
+        int length;
+
+        if(processes[k].process->state == RUNNING)
+          state = "Running\n";
+        else if(processes[k].process->state == READY)
+          state = "Ready\n";
+        else
+          state = "Blocked\n";
+
+        length = strlen(state);
+        memcpy(buffer + j, state, length);
+        j += length;
+        size -= length;
+      }
+      k = processes[k].next;
+  }
+  if(j < size)
+    buffer[j] = '\0';
+  else
+    buffer[size - 1] = '\0';
+}

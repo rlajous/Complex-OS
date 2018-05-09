@@ -45,4 +45,6 @@ void blockProcess(int pid);
 
 void unblockProcess(int pid);
 
+void getProcesses(char * buffer, int size);
+
 #endif

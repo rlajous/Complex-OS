@@ -75,8 +75,8 @@ int sysKill(uint64_t pid, uint64_t rdx, uint64_t rcx) {
 	return 0;
 }
 
-int sysPs(uint64_t rsi, uint64_t rdx, uint64_t rcx) {
-	//TODO
+int sysPs(uint64_t buffer, uint64_t size, uint64_t rcx) {
+	getProcesses((char*)buffer, (int) size);
   return 0;
 }
 

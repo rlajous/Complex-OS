@@ -1,6 +1,6 @@
 include ../Makefile.inc
 
-MODULE=0003-hello.bin
+MODULE=0003-ps.bin
 SOURCES=$(wildcard [^_]*.c)
 LIBC=$(wildcard ../Libc/*.o)
 LOADER=../Loader/module.ld ../Loader/_loader.c
