@@ -35,6 +35,8 @@ void * switchToKernelStack(void * rsp);
 
 void * getEntryPoint();
 
+void killForeground();
+
 void killCurrent();
 
 void killProcess(int pid);

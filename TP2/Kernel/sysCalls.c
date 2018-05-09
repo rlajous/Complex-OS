@@ -71,6 +71,18 @@ int sysExec(uint64_t filename, uint64_t argc, uint64_t argv) {
 	return -1;
 }
 
+int sysExecBackground(uint64_t filename, uint64_t argc, uint64_t argv) {
+	int i = 0;
+	while(modules[i].name != 0){
+		if(strcmp((const char *)filename, modules[i].name) == 0) {
+			argv = (uint64_t)backupArguments(argc, (char **)argv);
+			return addModuleProcessBackground(i, argc, (char **) argv);
+		}
+		i++;
+	}
+	return -1;
+}
+
 int sysKill(uint64_t pid, uint64_t rdx, uint64_t rcx) {
 	killProcess(pid);
 	return 0;
@@ -159,17 +171,18 @@ void sysCallsSetup(){
 	sysCalls[8] = &sysKill;
 	sysCalls[9] = &sysPs;
 	sysCalls[10] = &sysGetPid;
+	sysCalls[11] = &sysExecBackground;
 
-	sysCalls[11] = &sysAllocateMemory;
-	sysCalls[12] = &sysFreeMemory;
+	sysCalls[12] = &sysAllocateMemory;
+	sysCalls[13] = &sysFreeMemory;
 
-	sysCalls[13] = &sysCreateMutex;
-	sysCalls[14] = &sysReleaseMutex;
-	sysCalls[15] = &sysUpMutex;
-	sysCalls[16] = &sysDownMutex;
+	sysCalls[14] = &sysCreateMutex;
+	sysCalls[15] = &sysReleaseMutex;
+	sysCalls[16] = &sysUpMutex;
+	sysCalls[17] = &sysDownMutex;
 
-	sysCalls[17] = &sysCreateChannel;
-	sysCalls[18] = &sysSend;
-	sysCalls[19] = &sysReceive;
-	sysCalls[20] = &sysDeleteChannel;
+	sysCalls[18] = &sysCreateChannel;
+	sysCalls[19] = &sysSend;
+	sysCalls[20] = &sysReceive;
+	sysCalls[21] = &sysDeleteChannel;
 }

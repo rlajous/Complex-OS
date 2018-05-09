@@ -42,7 +42,7 @@ void parseScanCode(uint8_t scanCode) {
 					char ch = scanCodes[shiftMayus][scanCode];
 					if(ch != 0) {
 						if(ctrl && ch == 'c') {
-							killCurrent();
+							killForeground();
 						}
 						else
 							writeBuffer(ch);

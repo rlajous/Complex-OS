@@ -1,5 +1,6 @@
 #include <scheduler.h>
 #include <process.h>
+#include <terminal.h>
 
 static roundRobinNode_t processes[MAX_PROCESSES];
 static int firstAvailableSpace = 0;
@@ -129,6 +130,10 @@ void * getEntryPoint() {
   return processes[current].process->entryPoint;
 }
 
+void killForeground() {
+  killProcess(foreground->pid);
+}
+
 void killCurrent() {
   killProcess(processes[current].process->pid);
 }
@@ -137,6 +142,11 @@ void killProcess(int pid) {
   int index = getProcessIndex(pid);
 
   if(index != PID_NOT_FOUND) {
+    if(foreground->pid == pid) {
+      resetBuffer();
+      setForeground(2);
+      unblockProcess(2);
+    }
     removeProcess(processes[index].process);
     yield();
   }

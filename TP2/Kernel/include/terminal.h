@@ -69,4 +69,6 @@ void keyboardRight();
 
 void setEcho(uint8_t boolean);
 
+void resetBuffer();
+
 #endif

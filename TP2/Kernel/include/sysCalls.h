@@ -11,7 +11,7 @@
 #include <buddyMemoryAllocator.h>
 #include <channel.h>
 
-#define SYSCALLS 21
+#define SYSCALLS 22
 
 typedef int (*sys)(uint64_t rsi, uint64_t rdx, uint64_t rcx);
 

@@ -28,6 +28,8 @@ void copyModule(void * moduleAddress);
 
 int getModule(void * moduleAddress);
 
+int addModuleProcessBackground(int moduleIndex, int argc, char **argv);
+
 int addModuleProcess(int moduleIndex, int argc, char **argv);
 
 void * initializeKernelBinary();

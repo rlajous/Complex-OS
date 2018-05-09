@@ -430,3 +430,10 @@ void keyboardRight() {
 void setEcho(uint8_t boolean) {
 	echo = boolean;
 }
+
+void resetBuffer() {
+	startIndex = 0;
+	endIndex = 0;
+	writeIndex = 0;
+	readIndex = 0;
+}

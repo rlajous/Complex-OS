@@ -48,11 +48,20 @@ void copyModule(void *moduleAddress) {
   }
 }
 
-int addModuleProcess(int moduleIndex, int argc, char **argv) {
+int addModuleProcessBackground(int moduleIndex, int argc, char **argv) {
   int ret;
   process_t * process = createProcess(modules[moduleIndex].address, argc, argv, modules[moduleIndex].name);
   ret = addProcess(process);
   yield();
+  return ret;
+}
+
+int addModuleProcess(int moduleIndex, int argc, char **argv) {
+  int ret;
+  process_t * process = createProcess(modules[moduleIndex].address, argc, argv, modules[moduleIndex].name);
+  ret = addProcess(process);
+  setForeground(process->pid);
+  blockProcess(2);
   return ret;
 }
 

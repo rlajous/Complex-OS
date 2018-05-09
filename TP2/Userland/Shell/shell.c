@@ -20,6 +20,14 @@ int main(int argc, char *argv[]) {
 }
 
 int execv(char *filename, int argc, char *argv[]) {
+  char* string = filename;
+  while(*string != '\0') {
+    string++;
+  }
+  if(*(string - 1) == '&') {
+    *(string - 1) = '\0';
+    return int80(11, (uint64_t) filename, argc, (uint64_t) argv);
+  }
 	return int80(7, (uint64_t)filename, argc, (uint64_t)argv);
 }
 
