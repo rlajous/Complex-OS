@@ -122,19 +122,20 @@ int isValid(int mutex) {
 }
 
 void mutexDown(int mutex, int pid) {
-  int lock;
+  int locked;
   int added;
+
+  lock();
 
   int a = mutexes[mutex].value;
 
   if(isValid(mutex)) {
-    lock = testAndSetLock(&a);
+    locked = testAndSetLock(&a);
     mutexes[mutex].value = a;
+    unlock();
 
-
-    if (lock != BLOCKED) {
+    if (locked != BLOCKED) {
       added = addToBlocked(mutex, pid);
-
       if (added != FULL_LIST) {
         blockProcess(pid);
       } else {
@@ -142,6 +143,8 @@ void mutexDown(int mutex, int pid) {
       }
     }
   }
+  else
+    unlock();
 }
 
 void mutexUp(int mutex) {
@@ -150,7 +153,7 @@ void mutexUp(int mutex) {
 
   if(isValid(mutex)) {
     unlocked = unlockProcess(mutex);
-    if(unlocked == 0)
+    if (unlocked == 0)
       mutexes[mutex].value = 0;
   }
 }

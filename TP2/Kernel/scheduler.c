@@ -8,6 +8,7 @@ static int current = 0;
 static int processQuantity = 0;
 static int quantum = QUANTUM;
 static void * schedulerAuxiliaryStack;
+static int changeLock = 0;
 
 
 void initializeScheduler() {
@@ -21,6 +22,9 @@ void initializeScheduler() {
 void * nextProcess() {
   int next = current;
   int first = next;
+
+  if(changeLock == 1)
+    return getCurrentStack();
 
   if(processes[current].process != NULL && processes[current].process->state != BLOCKED) {
     processes[current].process->state = READY;
@@ -235,4 +239,12 @@ void setForeground(int pid) {
 
 int isForeground(int pid) {
   return foreground->pid == pid;
+}
+
+void lock() {
+  changeLock = 1;
+}
+
+void unlock() {
+  changeLock = 0;
 }

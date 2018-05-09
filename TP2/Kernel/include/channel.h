@@ -6,6 +6,7 @@
 #include <mutex.h>
 
 #define SEND_MESSAGE_ERROR -1
+#define MAX_MESSAGES 10
 
 typedef struct messageNode{
     int length;
@@ -16,10 +17,14 @@ typedef struct messageNode{
 typedef struct channelNode{
     int senderPid;
     int recipientPid;
-    int senderMutex;
-    int recipientMutex;
+    int senderSendMutex;
+    int recipientSendMutex;
+    int senderReceiveMutex;
+    int recipientReceiveMutex;
     messageNode_t* senderToRecipient;
+    int senderToRecipientMessages;
     messageNode_t* recipientToSender;
+    int recipientToSenderMessages;
     struct channelNode* nextChannel;
 } channelNode_t;
 
@@ -35,13 +40,13 @@ messageNode_t* addMessageToList(messageNode_t* newMessage, messageNode_t* listHe
 
 messageNode_t* popMessage(messageNode_t** listHead);
 
-void addMessageToChannel(messageNode_t* newMessage, channelNode_t* channel, int recipientPid, int senderPid);
+int addMessageToChannel(messageNode_t* newMessage, channelNode_t* channel, int recipientPid, int senderPid);
 
 messageNode_t* getNextMessageForPid(channelNode_t* channel, int pid);
 
 channelNode_t * createChannel(int senderPid, int recipientPid);
 
-void generateChannelMutexName(int senderPid, int recipientPid, char * mutexName);
+void generateChannelMutexName(int senderPid, int recipientPid, char * mutexName, int send);
 
 void deleteChannel(channelNode_t * channel);
 
@@ -53,8 +58,12 @@ int sendMessage(int recipientPid, char* message, int length);
 
 char * receiveMessage(int pid, int length);
 
-void unlockRecieve(int senderPid, channelNode_t * channel);
+void unlockReceive(int senderPid, channelNode_t * channel);
 
-void lockRecieve(int recipientPid, channelNode_t * channel);
+void lockReceive(int recipientPid, channelNode_t * channel);
+
+void unlockSend(int recipientPid, channelNode_t * channel);
+
+void lockSend(int senderPid, channelNode_t * channel);
 
 #endif

@@ -51,4 +51,8 @@ void setForeground(int pid);
 
 int isForeground(int pid);
 
+void lock();
+
+void unlock();
+
 #endif
