@@ -11,7 +11,7 @@
 #include <buddyMemoryAllocator.h>
 #include <channel.h>
 
-#define SYSCALLS 22
+#define SYSCALLS 23
 
 typedef int (*sys)(uint64_t rsi, uint64_t rdx, uint64_t rcx);
 
@@ -55,7 +55,10 @@ int sysReceive(uint64_t rsi, uint64_t rdx, uint64_t rcx);
 
 int sysDeleteChannel(uint64_t rsi, uint64_t rdx, uint64_t rcx);
 
+int sysWriteCharAtScreenPos(char ch, char style, int x, int y);
+
 int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx);
+
 
 void sysCallsSetup();
 

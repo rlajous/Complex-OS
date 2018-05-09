@@ -152,6 +152,11 @@ int sysDeleteChannel(uint64_t recipientPid, uint64_t rdx, uint64_t rcx) {
 	return 0;
 }
 
+int sysWriteCharAtScreenPos(char ch, char style, int x, int y){
+	printCharAtPos(ch, style, x, y);
+	return 0;
+}
+
 int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx) {
 	if(rdi >= SYSCALLS)
 		return -1;
@@ -185,4 +190,6 @@ void sysCallsSetup(){
 	sysCalls[19] = &sysSend;
 	sysCalls[20] = &sysReceive;
 	sysCalls[21] = &sysDeleteChannel;
+
+	sysCalls[22] = &sysWriteCharAtScreenPos;
 }
