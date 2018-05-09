@@ -12,6 +12,10 @@ void putchar(char c) {
 	write(1, &c, 1);
 }
 
+void putcharatpos(char ch, int x, int y){
+	int80(22, ch, x, y);
+}
+
 char getchar() {
 	char ch;
 	do

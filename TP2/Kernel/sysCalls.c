@@ -152,8 +152,8 @@ int sysDeleteChannel(uint64_t recipientPid, uint64_t rdx, uint64_t rcx) {
 	return 0;
 }
 
-int sysWriteCharAtScreenPos(char ch, char style, int x, int y){
-	printCharAtPos(ch, style, x, y);
+int sysWriteCharAtScreenPos(char ch, int x, int y){
+	printCharAtPos(ch, x, y);
 	return 0;
 }
 
