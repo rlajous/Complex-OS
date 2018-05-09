@@ -7,6 +7,8 @@ static sys sysCalls[SYSCALLS];
 
 int sysRead(uint64_t fileDescriptor, uint64_t buffer, uint64_t size) {
 	int index = 0;
+	if(!isForeground(getpid()))
+	  blockProcess(getpid());
 	if(fileDescriptor == 0) {
 		while(index++ < size)
 			*((char*)buffer++)= readBuffer();
@@ -62,8 +64,7 @@ int sysExec(uint64_t filename, uint64_t argc, uint64_t argv) {
 	while(modules[i].name != 0){
 		if(strcmp((const char *)filename, modules[i].name) == 0) {
 			argv = (uint64_t)backupArguments(argc, (char **)argv);
-      addModuleProcess(i, argc, (char **) argv);
-			return 0;
+			return addModuleProcess(i, argc, (char **) argv);
 		}
 		i++;
 	}

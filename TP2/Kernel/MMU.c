@@ -25,6 +25,7 @@ void startSystem() {
   process_t* shell = createProcess(modules[0].address , 0, NULL, modules[0].name);
   addProcess(initProcess);
   addProcess(shell);
+  setForeground(shell->pid);
   startFirstProcess();
 }
 
@@ -47,10 +48,12 @@ void copyModule(void *moduleAddress) {
   }
 }
 
-void addModuleProcess(int moduleIndex, int argc, char **argv) {
+int addModuleProcess(int moduleIndex, int argc, char **argv) {
+  int ret;
   process_t * process = createProcess(modules[moduleIndex].address, argc, argv, modules[moduleIndex].name);
-  addProcess(process);
+  ret = addProcess(process);
   yield();
+  return ret;
 }
 
 char** backupArguments(int argc, char * argv[]) {

@@ -3,6 +3,7 @@
 
 static roundRobinNode_t processes[MAX_PROCESSES];
 static int firstAvailableSpace = 0;
+static process_t * foreground;
 static int current = 0;
 static int processQuantity = 0;
 static int quantum = QUANTUM;
@@ -21,11 +22,12 @@ void * nextProcess() {
   int next = current;
   int first = next;
 
-  if(processes[current].process != NULL)
+  if(processes[current].process != NULL && processes[current].process->state != BLOCKED) {
     processes[current].process->state = READY;
+  }
 
   do {
-    next = processes[current].next;
+    next = processes[next].next;
   } while(processes[next].process->state != READY && first != next);
 
   current = next;
@@ -50,7 +52,7 @@ void * getCurrentStack() {
   return processes[current].process->stack;
 }
 
-void addProcess(process_t* process) {
+int addProcess(process_t* process) {
   int next;
 
   if(processQuantity != MAX_PROCESSES) {
@@ -66,7 +68,9 @@ void addProcess(process_t* process) {
     }
     firstAvailableSpace = findFirstAvailableSpace();
     processQuantity++;
+    return process->pid;
   }
+  return -1;
 }
 
 void removeProcess(process_t *process) {
@@ -223,4 +227,12 @@ void getProcesses(char * buffer, int size) {
     buffer[j] = '\0';
   else
     buffer[size - 1] = '\0';
+}
+
+void setForeground(int pid) {
+  foreground = processes[getProcessIndex(pid)].process;
+}
+
+int isForeground(int pid) {
+  return foreground->pid == pid;
 }

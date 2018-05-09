@@ -25,7 +25,7 @@ int getpid();
 
 void * getCurrentStack();
 
-void addProcess(process_t* process);
+int addProcess(process_t* process);
 
 void removeProcess(process_t* process);
 
@@ -46,5 +46,9 @@ void blockProcess(int pid);
 void unblockProcess(int pid);
 
 void getProcesses(char * buffer, int size);
+
+void setForeground(int pid);
+
+int isForeground(int pid);
 
 #endif

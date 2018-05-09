@@ -84,7 +84,8 @@ testAndSetLock:
     push rbp
     mov rbp, rsp
 
-    mov rax, 1
+    mov rax, 0
+    mov rdx, 1
 
     lock CMPXCHG [rdi], rdx
 
