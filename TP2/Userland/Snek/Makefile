@@ -1,0 +1,16 @@
+include ../Makefile.inc
+
+MODULE=0011-snek.bin
+SOURCES=$(wildcard [^_]*.c)
+LIBC=$(wildcard ../Libc/*.o)
+LOADER=../Loader/module.ld ../Loader/_loader.c
+
+all: $(MODULE)
+
+$(MODULE): $(SOURCES) $(LOADER)
+	$(GCC) $(GCCFLAGS) -I../Libc/include -T $(LOADER) $(SOURCES) $(LIBC) -o ../$(MODULE)
+
+clean:
+	rm -rf *.o
+
+.PHONY: all clean print

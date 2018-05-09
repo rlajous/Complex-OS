@@ -1,4 +1,4 @@
-#include <snek.h>
+#include "snek.h"
 
 int main(int argc, char *argv[]) {
 	player_t player;
