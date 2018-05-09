@@ -25,20 +25,20 @@ void handleInput(char* inputKey, player_t* player){
 	*inputKey = getchar();
 	switch(inputKey){
 		case 'w':
-			*player.speed.x = 0;
-			*player.speed.y = 1;
+			(*player).speed.x = 0;
+			(*player).speed.y = 1;
 			break;
 		case 's':
-			*player.speed.x = 0;
-			*player.speed.y = -1;
+			(*player).speed.x = 0;
+			(*player).speed.y = -1;
 			break;
 		case 'd':
-			*player.speed.x = 1;
-			*player.speed.y = 0;
+			(*player).speed.x = 1;
+			(*player).speed.y = 0;
 			break;
 		case 'a':
-			*player.speed.x = -1;
-			*player.speed.y = 0;
+			(*player).speed.x = -1;
+			(*player).speed.y = 0;
 	}	
 }
 
@@ -59,13 +59,13 @@ void draw(player_t* player, tail_t* tail, snack_t* snack){
 }
 
 void updatePlayer(player_t* player){
-	*player.position.x += *player.speed.y;
-	*player.position.x += *player.speed.y;
+	(*player).position.x += (*player).speed.y;
+	(*player).position.x += (*player).speed.y;
 }
 
 void updateTail(player_t* player, tail_t* tail){
-	(*tail).tailPositions[(*tail).youngestElemIndex].x = *player.position.x;
-	(*tail).tailPositions[(*tail).youngestElemIndex].y = *player.position.y;
+	(*tail).tailPositions[(*tail).youngestElemIndex].x = (*player).position.x;
+	(*tail).tailPositions[(*tail).youngestElemIndex].y = (*player).position.y;
 	(*tail).youngestElemIndex++;
 	(*tail).oldestElemIndex++;
 	if ((*tail).youngestElemIndex >= TAIL_LENGTH_LIMIT)
@@ -75,18 +75,18 @@ void updateTail(player_t* player, tail_t* tail){
 }
 
 void checkCollisionWithSnack(player_t* player, snack_t* snack){
-	if (*player.position.x = *snack.position.x && *player.position.y = *snack.position.y){
+	if ((*player).position.x = (*snack).position.x && (*player).position.y = (*snack).position.y){
 		(*tail).length++;
 		(*tail).oldestElemIndex--;
-		*snack.position.x = getSeconds() % GAME_WIDTH;
-		*snack.position.y = getSeconds() % GAME_HEIGHT;
+		(*snack).position.x = getSeconds() % GAME_WIDTH;
+		(*snack).position.y = getSeconds() % GAME_HEIGHT;
 	}
 }
 
 void checkCollisionWithTail(player_t* player, tail_t* tail){
 	for (int i = (*tail).oldestElemIndex; i < (*tail).length; i++){
-		if ((*tail).tailPositions[i].x == *player.position.x && 
-			(*tail).tailPositions[i].y == *player.position.y)
+		if ((*tail).tailPositions[i].x == (*player).position.x && 
+			(*tail).tailPositions[i].y == (*player).position.y)
 			playerAlive = 0;
 	}
 }
