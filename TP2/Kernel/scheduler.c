@@ -122,8 +122,7 @@ void * getEntryPoint() {
 }
 
 void killCurrent() {
-  removeProcess(processes[current].process);
-  yield();
+  killProcess(processes[current].process->pid);
 }
 
 void killProcess(int pid) {

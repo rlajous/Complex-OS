@@ -19,7 +19,7 @@ int getMutex(char * name, int pid) {
 
   for(i = 0; i < MAX_MUTEXES; i++) {
     if(!strcmp(mutexes[i].name, name) && mutexes[i].pid != NOT_USED) {
-      return mutex;
+      return i;
     }
   }
 
@@ -37,9 +37,9 @@ int createMutex(int pid, char * name) {
     memcpy(mutexes[mutex].name, name, length);
     mutexes[mutex].pid = pid;
     usedMutexes++;
+    firstAvailableMutex = getNextMutexAvailable();
   } else
     mutex = MUTEX_CREATION_ERROR;
-
   return mutex;
 }
 

@@ -8,14 +8,15 @@
 #include <MMU.h>
 #include <buddyMemoryAllocator.h>
 #include <scheduler.h>
+#include <mutex.h>
 
 int main(void) {
 	clearScreen();
 	initializeHeap();
 	initializeScheduler();
+	setupMutexSystem();
 	setupIDT();
 
 	startSystem();
-
 	return 0;
 }

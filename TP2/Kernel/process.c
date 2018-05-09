@@ -14,9 +14,10 @@ process_t * createProcess(void * entryPoint, int argc, char * argv[], char * nam
   process->stack = (void *) (process);
   process->stack = fillStackFrame(entryPoint, process->stack, argc, argv);
   process->memoryBase = aux;
-  if(length < MAX_NAME)
+  if(length < MAX_NAME) {
     memcpy(process->name, name, length);
-  else
+    process->name[length] = '\0';
+  } else
     process->name[0] = 0;
 
   return process;
