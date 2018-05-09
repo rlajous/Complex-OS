@@ -125,8 +125,12 @@ void mutexDown(int mutex, int pid) {
   int lock;
   int added;
 
+  int a = mutexes[mutex].value;
+
   if(isValid(mutex)) {
-    lock = testAndSetLock(&(mutexes[mutex].value));
+    lock = testAndSetLock(&a);
+    mutexes[mutex].value = a;
+
 
     if (lock != BLOCKED) {
       added = addToBlocked(mutex, pid);

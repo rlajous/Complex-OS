@@ -6,7 +6,7 @@ static int nextPid = 1;
 process_t * createProcess(void * entryPoint, int argc, char * argv[], char * name) {
   int length = strlen(name);
   void * aux = allocatePages(PROCESS_INITIAL_PAGES);
-  process_t * process = (process_t *)(aux + PROCESS_INITIAL_PAGES * PAGE_SIZE - 1 - sizeof(process));
+  process_t * process = (process_t *)(aux + PROCESS_INITIAL_PAGES * PAGE_SIZE - 1 - sizeof(process_t));
 
   process->entryPoint = entryPoint;
   process->pid = nextPid++;

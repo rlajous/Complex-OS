@@ -31,6 +31,30 @@ void * allocateMemory(uint64_t bytes) {
   return allocatePages(pages);
 }
 
+void * reallocateMemory(uint64_t bytes, void* address) {
+  int pages = pagesToAllocate(bytes);
+
+  return reallocatePages(pages, address);
+}
+
+//NOT TESTED
+void * reallocatePages(int pages, void* address) {
+  void * aux = NULL;
+  int previousPages;
+  int divisions = log2(getParentIndex(address)) + 1;
+
+  if(pages == 0 || pages > PAGE_QUANTITY)
+    return aux;
+
+  if(freeMemory(address) == 1) {
+    previousPages = ((PAGE_SIZE * PAGE_QUANTITY) >> divisions);
+    aux = allocatePages(pages);
+    if(aux != NULL)
+      memcpy(address, aux, previousPages * PAGE_SIZE);
+  }
+  return aux;
+}
+
 void * getPages(int quantity) {
   int levelsToDescend = maxLevels - log2(quantity);
 
@@ -45,13 +69,12 @@ void * getPagesRecursive(int index, int levels) {
   void * left;
   void * right;
 
-  if(buddyHeap.blockUsage[index - 1] == FULLY_USED || buddyHeap.blockUsage[index - 1] == ALLOCATED)
+  if(buddyHeap.blockUsage[index - 1] == FULLY_USED || buddyHeap.blockUsage[index - 1] == ALLOCATED) {
     return NULL;
-
+  }
   if(levels == 0) {
     if(buddyHeap.blockUsage[index - 1] == HALF_USED)
       return NULL;
-
     buddyHeap.blockUsage[index - 1] = ALLOCATED;
     return buddyHeap.memoryBase[index - 1];
   }
@@ -66,7 +89,9 @@ void * getPagesRecursive(int index, int levels) {
 
   right = getPagesRecursive(RIGHT(index), levels - 1);
 
-  if(right != NULL && (buddyHeap.blockUsage[RIGHT(index) - 1] == FULLY_USED || buddyHeap.blockUsage[RIGHT(index) - 1] == ALLOCATED)) {
+
+  if(right != NULL && (buddyHeap.blockUsage[RIGHT(index) - 1] != HALF_USED)
+     && (buddyHeap.blockUsage[LEFT(index) - 1] != HALF_USED)) {
     buddyHeap.blockUsage[index - 1] = FULLY_USED;
   }
   return right;
@@ -78,6 +103,8 @@ void setMemoryBlockDivisionBases(int parentIndex) {
 
   if(buddyHeap.memoryBase[LEFT(parentIndex) - 1] == NULL || buddyHeap.memoryBase[RIGHT(parentIndex) - 1] == NULL) {
     divisions = log2(parentIndex) + 1;
+    if(parentIndex % 2 != 0)
+      divisions -= 1;
     memory = (unsigned long)buddyHeap.memoryBase[parentIndex - 1];
 	  buddyHeap.memoryBase[LEFT(parentIndex) - 1] = (void *)memory;
 
@@ -119,6 +146,25 @@ void freeMemoryRecursive(int index) {
     }
     freeMemoryRecursive(PARENT(index));
   }
+}
+
+int getParentIndex(void * memoryBase) {
+  int index = ((unsigned long)memoryBase - (unsigned long)base)/PAGE_SIZE + 1;
+  return getParentIndexRecursive(memoryBase, index + (HEAPSIZE/2));
+}
+
+int getParentIndexRecursive(void * memoryBase, int index) {
+
+  if(index <= 0)
+    return 0;
+
+  if(buddyHeap.blockUsage[index - 1] == ALLOCATED && buddyHeap.memoryBase[index - 1] == memoryBase)
+    return PARENT(index);
+
+  if(buddyHeap.blockUsage[index - 1] == UNUSED)
+    return getParentIndexRecursive(memoryBase, PARENT(index));
+
+  return -1;
 }
 
 int isAllocatedPage(void * memoryBase) {
