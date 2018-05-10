@@ -26,7 +26,7 @@ int execv(char *filename, int argc, char *argv[]) {
   }
   if(*(string - 1) == '&') {
     *(string - 1) = '\0';
-    return int80(11, (uint64_t) filename, argc, (uint64_t) argv);
+    return addBackgroundProcess(filename, argc, argv);
   }
 	return int80(7, (uint64_t)filename, argc, (uint64_t)argv);
 }

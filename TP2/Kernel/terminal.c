@@ -67,7 +67,7 @@ void printChar(char ch, char style) {
 	incrementCursor();
 }
 
-void printCharAtPos(char ch, int posX, int posY){
+void printCharAtPos(char ch, int posX, int posY) {
 	int x = posX;
 	int y = posY;	
 	if (posX < 0 || posX > WIDTH || posY < 0 || posY > HEIGHT)

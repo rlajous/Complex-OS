@@ -1,6 +1,31 @@
 #include <stdlib.h>
 
 
+void kill(int pid) {
+  int80(8,(uint64_t) pid,0,0);
+}
+
+int addBackgroundProcess(char * filename, int argc, char * argv[]) {
+  return int80(11, (uint64_t) filename, argc, (uint64_t) argv);
+}
+
+int getpid() {
+ return int80(10, 0,0,0); 
+}
+
+void deleteChannel(int recipientPid) {
+ int80(21, (uint64_t) recipientPid, 0, 0); 
+}
+
+int createChannel(int recipientPid) {
+ return int80(18, (uint64_t) recipientPid, 0, 0); 
+}
+
+int receive(int senderPid, char * buffer, int length) {
+  return int80(20, (uint64_t) senderPid, (uint64_t) buffer, (uint64_t) length);
+}
+
+
 /*void * malloc(unsigned int size) {
 	void * address;
 	int80(8,(uint64_t)&address,size,0);

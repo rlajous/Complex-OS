@@ -55,7 +55,7 @@ int sysReceive(uint64_t rsi, uint64_t rdx, uint64_t rcx);
 
 int sysDeleteChannel(uint64_t rsi, uint64_t rdx, uint64_t rcx);
 
-int sysWriteCharAtScreenPos(char ch, int x, int y);
+int sysWriteCharAtScreenPos(uint64_t ch, uint64_t x, uint64_t y);
 
 int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx);
 

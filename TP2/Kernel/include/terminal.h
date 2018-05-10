@@ -15,6 +15,8 @@
 #define FALSE 0
 #endif
 
+void printCharAtPos(char ch, int posX, int posY);
+
 void printc(char ch);
 
 void printcWithStyle(char ch, char style);
