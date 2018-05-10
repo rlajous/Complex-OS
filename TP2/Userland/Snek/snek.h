@@ -33,7 +33,7 @@ typedef struct Snack{
 
 void handleInput(char* inputKey, player_t* player);
 void update(player_t* player, tail_t* tail, snack_t* snack, int* playerAlive);
-void updatePlayer(player_t* player);
+void updatePlayer(player_t* player, int* playerAlive);
 void updateTail(player_t* player, tail_t* tail);
 void checkCollisionWithSnack(player_t* player, tail_t* tail, snack_t* snack);
 void checkCollisionWithTail(player_t* player, tail_t* tail, int* playerAlive);

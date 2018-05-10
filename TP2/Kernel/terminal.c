@@ -72,8 +72,8 @@ void printCharAtPos(char ch, int posX, int posY){
 	int y = posY;	
 	if (posX < 0 || posX > WIDTH || posY < 0 || posY > HEIGHT)
 		return;
-	video[x][y].style = defaultStyle;
-	video[x][y].ch = ch;
+	video[y][x].style = defaultStyle;
+	video[y][x].ch = ch;
 }
 
 void printc(char ch) {
