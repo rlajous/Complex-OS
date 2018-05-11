@@ -81,41 +81,30 @@ messageNode_t* popMessage(messageNode_t** listHead) {
 int addMessageToChannel(messageNode_t* newMessage, channelNode_t* channel, int recipientPid, int senderPid){
 	if (channelBelongsToPids(channel, recipientPid, senderPid)) {
 		if(channel->recipientPid == recipientPid) {
-			if(channel->senderToRecipientMessages < MAX_MESSAGES) {
-				channel->senderToRecipient = addMessageToList(newMessage, channel->senderToRecipient);
-				channel->senderToRecipientMessages++;
-				return 1;
-			}
+			channel->senderToRecipient = addMessageToList(newMessage, channel->senderToRecipient);
+			return 1;
 		} else {
-			if(channel->recipientToSenderMessages < MAX_MESSAGES) {
-				channel->recipientToSender = addMessageToList(newMessage, channel->recipientToSender);
-				channel->recipientToSenderMessages++;
-				return 1;
-			}
+			channel->recipientToSender = addMessageToList(newMessage, channel->recipientToSender);
+			return 1;
 		}
 	}
+
 	return SEND_MESSAGE_ERROR;
 }
 
 messageNode_t* getNextMessageForPid(channelNode_t* channel, int pid){
 	messageNode_t * aux = NULL;
 
-	if (pid == channel->recipientPid)	{
+	if (pid == channel->recipientPid)
 		aux = channel->senderToRecipient;
-		if(aux != NULL) {
-			channel->senderToRecipientMessages--;
-		}
-	} else {
+	else
 		aux = channel->recipientToSender;
-		if(aux != NULL) {
-			channel->recipientToSenderMessages--;
-		}
-	}
 
 	return popMessage(&aux);
 }
 
 channelNode_t * createChannel(int senderPid, int recipientPid){
+	int i;
   channelNode_t* newChannel = getChannelFromList(senderPid, recipientPid);
   if(newChannel != NULL)
     return newChannel;
@@ -132,21 +121,20 @@ channelNode_t * createChannel(int senderPid, int recipientPid){
     newChannel->senderToRecipient = NULL;
     newChannel->recipientToSender = NULL;
 
-		newChannel->senderToRecipientMessages = 0;
-		newChannel->recipientToSenderMessages = 0;
-
     generateChannelMutexName(senderPid, recipientPid, senderMutexName, 1);
     generateChannelMutexName(recipientPid, senderPid, recipientMutexName, 1);
-    newChannel->senderSendMutex = createMutex(senderPid, senderMutexName);
-		newChannel->recipientSendMutex = createMutex(senderPid, recipientMutexName);
+    newChannel->senderSendSem = createSemaphore(senderPid, senderMutexName);
+		newChannel->recipientSendSem = createSemaphore(senderPid, recipientMutexName);
 
 		generateChannelMutexName(senderPid, recipientPid, senderMutexName, 0);
 		generateChannelMutexName(recipientPid, senderPid, recipientMutexName, 0);
-		newChannel->senderReceiveMutex = createMutex(senderPid, senderMutexName);
-		newChannel->recipientReceiveMutex = createMutex(senderPid, recipientMutexName);
+		newChannel->senderReceiveSem = createSemaphore(senderPid, senderMutexName);
+		newChannel->recipientReceiveSem = createSemaphore(senderPid, recipientMutexName);
 
-    mutexDown(newChannel->recipientReceiveMutex, 0);
-    mutexDown(newChannel->senderReceiveMutex, 0);
+		for(i = 0; i < MAX_MESSAGES; i++) {
+			signal(newChannel->senderSendSem);
+			signal(newChannel->recipientSendSem);
+		}
 
     addChannelToList(newChannel);
   }
@@ -171,10 +159,10 @@ void deleteChannel(channelNode_t * channel) {
   removeChannelFromList(channel);
 	deleteMessages(channel->recipientToSender);
 	deleteMessages(channel->senderToRecipient);
-	releaseMutex(channel->senderPid, channel->senderReceiveMutex);
-	releaseMutex(channel->recipientPid, channel->recipientReceiveMutex);
-	releaseMutex(channel->senderPid, channel->senderSendMutex);
-	releaseMutex(channel->recipientPid, channel->recipientReceiveMutex);
+	releaseSemaphore(channel->senderPid, channel->senderReceiveSem);
+	releaseSemaphore(channel->recipientPid, channel->recipientReceiveSem);
+	releaseSemaphore(channel->senderPid, channel->senderSendSem);
+	releaseSemaphore(channel->recipientPid, channel->recipientReceiveSem);
 	freeMemory(channel);
 }
 
@@ -196,25 +184,26 @@ messageNode_t * deleteMessage(messageNode_t * start) {
 int sendMessage(int recipientPid, char* message, int length) {
 	int senderPid = getpid();
 	messageNode_t* newMessage;
-	channelNode_t* channel;
+	channelNode_t* channel = NULL;
 	newMessage = allocateMemory(sizeof(messageNode_t));
-	newMessage->length = length;
-	newMessage->content = allocateMemory(length);
-	newMessage->nextMessage = NULL;
-	memcpy(newMessage->content, message, length);
-	channel = getChannelFromList(recipientPid, senderPid);
 
-	if (channel != NULL) {
-		if(addMessageToChannel(newMessage,channel,recipientPid, senderPid) == SEND_MESSAGE_ERROR) {
+	if(newMessage != NULL) {
+		newMessage->length = length;
+		newMessage->content = allocateMemory(length);
+		newMessage->nextMessage = NULL;
+		memcpy(newMessage->content, message, length);
+		channel = getChannelFromList(recipientPid, senderPid);
+
+		if (channel != NULL) {
 			lockSend(senderPid, channel);
-			deleteMessage(newMessage);
-			return sendMessage(recipientPid, message, length);
-		}
-		unlockReceive(senderPid, channel);
-		return 0;
-	}
+			addMessageToChannel(newMessage,channel,recipientPid, senderPid);
 
-	deleteMessage(newMessage);
+			unlockReceive(senderPid, channel);
+			return 0;
+		} else {
+			deleteMessage(newMessage);
+		}
+	}
 	return SEND_MESSAGE_ERROR;
 }
 
@@ -225,66 +214,61 @@ char * receiveMessage(int pid, int length) {
 	char * result = NULL;
 	channelNode_t* channel = getChannelFromList(recipientPid, pid);
 	if(channel != NULL) {
+		lockReceive(recipientPid, channel);
 		message = getNextMessageForPid(channel, recipientPid);
-		if(message == NULL) {
-			lockReceive(recipientPid, channel);
-			return receiveMessage(pid, length);
-		} else {
-			resultLength = length > message->length ? message->length: length;
-			result = allocateMemory(length);
-			memcpy(result, message->content, resultLength);
-			if(message->nextMessage == NULL) {
-        lockReceive(recipientPid, channel);
-      }
-			deleteMessage(message);
-			unlockSend(recipientPid, channel);
-		}
+
+		resultLength = length > message->length ? message->length: length;
+		result = allocateMemory(length);
+		memcpy(result, message->content, resultLength);
+
+		deleteMessage(message);
+		unlockSend(recipientPid, channel);
 	}
 	return result;
 }
 
 void unlockReceive(int senderPid, channelNode_t * channel) {
-	int mutex;
+	int semaphore;
 
 	if(channel->senderPid == senderPid)
-		mutex = channel->recipientReceiveMutex;
+		semaphore = channel->recipientReceiveSem;
 	else
-		mutex = channel->senderReceiveMutex;
+		semaphore = channel->senderReceiveSem;
 
-	mutexUp(mutex);
+	signal(semaphore);
 }
 
 void lockReceive(int recipientPid, channelNode_t * channel) {
-	int mutex;
+	int semaphore;
 
 	if(channel->recipientPid == recipientPid)
-		mutex = channel->recipientReceiveMutex;
+		semaphore = channel->recipientReceiveSem;
 	else
-		mutex = channel->senderReceiveMutex;
+		semaphore = channel->senderReceiveSem;
 
-	mutexDown(mutex, recipientPid);
+	wait(semaphore, recipientPid);
 }
 
 void unlockSend(int recipientPid, channelNode_t * channel) {
-	int mutex;
+	int semaphore;
 
 	if(channel->recipientPid == recipientPid)
-		mutex = channel->senderSendMutex;
+		semaphore = channel->senderSendSem;
 	else
-		mutex = channel->recipientSendMutex;
+		semaphore = channel->recipientSendSem;
 
-	mutexUp(mutex);
+	signal(semaphore);
 }
 
 void lockSend(int senderPid, channelNode_t * channel) {
-	int mutex;
+	int semaphore;
 
 	if(channel->senderPid == senderPid)
-		mutex = channel->senderSendMutex;
+		semaphore = channel->senderSendSem;
 	else
-		mutex = channel->recipientSendMutex;
+		semaphore = channel->recipientSendSem;
 
-	mutexDown(mutex, senderPid);
+	wait(semaphore, senderPid);
 }
 
 

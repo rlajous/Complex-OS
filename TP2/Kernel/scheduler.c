@@ -132,10 +132,12 @@ void * getEntryPoint() {
 
 void killForeground() {
   killProcess(foreground->pid);
+  yield();
 }
 
 void killCurrent() {
   killProcess(processes[current].process->pid);
+  yield();
 }
 
 void killProcess(int pid) {
@@ -148,7 +150,6 @@ void killProcess(int pid) {
       unblockProcess(2);
     }
     removeProcess(processes[index].process);
-    yield();
   }
 }
 
@@ -171,7 +172,6 @@ void blockProcess(int pid) {
 
   if(index != PID_NOT_FOUND) {
     processes[index].process->state = BLOCKED;
-    yield();
   }
 }
 

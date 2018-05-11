@@ -15,7 +15,7 @@ void setupMutexSystem() {
 
 int getMutex(char * name, int pid) {
   int i;
-  int mutex = NOT_USED;
+  int mutex;
 
   for(i = 0; i < MAX_MUTEXES; i++) {
     if(!strcmp(mutexes[i].name, name) && mutexes[i].pid != NOT_USED) {
@@ -47,9 +47,10 @@ int createMutex(int pid, char * name) {
 int releaseMutex(int pid, int mutex) {
   int released = 0;
 
-  if(isValid(mutex)) {
+  if(isValidMutex(mutex)) {
     if (pid == mutexes[mutex].pid) {
       mutexes[mutex].pid = NOT_USED;
+      mutexes[mutex].lockPid = NOT_USED;
       while(mutexes[mutex].blockedQuantity > 0)
         unlockProcess(mutex);
       released = 1;
@@ -75,8 +76,9 @@ void clearMutex(int mutex) {
 
   if(mutex < MAX_MUTEXES) {
     mutexes[mutex].pid = NOT_USED;
+    mutexes[mutex].lockPid = NOT_USED;
     mutexes[mutex].name[0] = '\0';
-    mutexes[mutex].value = 0;
+    mutexes[mutex].value = UNLOCKED;
     mutexes[mutex].blockedQuantity = 0;
 
     for(i = 0; i < MAX_BLOCKED; i++) {
@@ -114,7 +116,7 @@ int addToBlocked(int mutex, int pid) {
   return index;
 }
 
-int isValid(int mutex) {
+int isValidMutex(int mutex) {
   if(mutex < 0 || mutex >= MAX_MUTEXES)
     return 0;
 
@@ -127,34 +129,36 @@ void mutexDown(int mutex, int pid) {
 
   lock();
 
-  int a = mutexes[mutex].value;
+  if(isValidMutex(mutex)) {
+    locked = testAndSetLock(&mutexes[mutex].value);
 
-  if(isValid(mutex)) {
-    locked = testAndSetLock(&a);
-    mutexes[mutex].value = a;
-    unlock();
-
-    if (locked != BLOCKED) {
+    if (locked == BLOCKED) {
       added = addToBlocked(mutex, pid);
       if (added != FULL_LIST) {
         blockProcess(pid);
+        unlock();
+        yield();
       } else {
         killProcess(pid);
+        unlock();
+        yield();
       }
+    } else {
+      mutexes[mutex].lockPid = pid;
     }
   }
-  else
-    unlock();
+
+  unlock();
 }
 
-void mutexUp(int mutex) {
+void mutexUp(int mutex, int pid) {
 
   int unlocked = 0;
 
-  if(isValid(mutex)) {
+  if(isValidMutex(mutex) && mutexes[mutex].lockPid == pid) {
     unlocked = unlockProcess(mutex);
     if (unlocked == 0)
-      mutexes[mutex].value = 0;
+      mutexes[mutex].value = UNLOCKED;
   }
 }
 
@@ -168,6 +172,7 @@ int unlockProcess(int mutex) {
 
   while(i < MAX_BLOCKED && !unlocked) {
     if(mutexes[mutex].blocked[i] != NOT_USED) {
+      mutexes[mutex].lockPid = mutexes[mutex].blocked[i];
       unblockProcess(mutexes[mutex].blocked[i]);
       mutexes[mutex].blocked[i] = NOT_USED;
       mutexes[mutex].blockedQuantity--;

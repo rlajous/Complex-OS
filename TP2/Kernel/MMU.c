@@ -62,6 +62,7 @@ int addModuleProcess(int moduleIndex, int argc, char **argv) {
   ret = addProcess(process);
   setForeground(process->pid);
   blockProcess(2);
+  yield();
   return ret;
 }
 

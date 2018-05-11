@@ -3,7 +3,7 @@
 
 #include <buddyMemoryAllocator.h>
 #include <scheduler.h>
-#include <mutex.h>
+#include <semaphore.h>
 
 #define SEND_MESSAGE_ERROR -1
 #define MAX_MESSAGES 10
@@ -17,14 +17,15 @@ typedef struct messageNode{
 typedef struct channelNode{
     int senderPid;
     int recipientPid;
-    int senderSendMutex;
-    int recipientSendMutex;
-    int senderReceiveMutex;
-    int recipientReceiveMutex;
+
+    int senderSendSem;
+    int recipientSendSem;
+    int senderReceiveSem;
+    int recipientReceiveSem;
+
     messageNode_t* senderToRecipient;
-    int senderToRecipientMessages;
     messageNode_t* recipientToSender;
-    int recipientToSenderMessages;
+
     struct channelNode* nextChannel;
 } channelNode_t;
 

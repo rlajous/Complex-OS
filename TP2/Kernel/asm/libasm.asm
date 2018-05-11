@@ -79,26 +79,10 @@ startFirstProcess:
     sti
     ret
 
-;testAndSetLock(int * mutexLock)
+;testAndSetLock(int * mutexLock) returns 1 if lock successful
 testAndSetLock:
-    push rbp
-    mov rbp, rsp
-
     mov rax, 0
-    mov rdx, 1
 
-    lock CMPXCHG [rdi], rdx
+    lock xchg rax, [rdi]
 
-    jnz .notAcquired
-
-    mov rax, 1
-    jmp .ret
-
-.notAcquired:
-    mov rax, 0
-    jmp .ret
-
-.ret:
-    mov rsp, rbp
-    pop rbp
     ret

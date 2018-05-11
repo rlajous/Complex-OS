@@ -9,12 +9,14 @@
 #include <buddyMemoryAllocator.h>
 #include <scheduler.h>
 #include <mutex.h>
+#include <semaphore.h>
 
 int main(void) {
 	clearScreen();
 	initializeHeap();
 	initializeScheduler();
 	setupMutexSystem();
+	setupSemaphoreSystem();
 	setupIDT();
 
 	startSystem();

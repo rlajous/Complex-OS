@@ -7,8 +7,10 @@ static sys sysCalls[SYSCALLS];
 
 int sysRead(uint64_t fileDescriptor, uint64_t buffer, uint64_t size) {
 	int index = 0;
-	if(!isForeground(getpid()))
-	  blockProcess(getpid());
+	if(!isForeground(getpid())) {
+		blockProcess(getpid());
+		yield();
+	}
 	if(fileDescriptor == 0) {
 		while(index++ < size)
 			*((char*)buffer++)= readBuffer();
@@ -85,6 +87,7 @@ int sysExecBackground(uint64_t filename, uint64_t argc, uint64_t argv) {
 
 int sysKill(uint64_t pid, uint64_t rdx, uint64_t rcx) {
 	killProcess(pid);
+	yield();
 	return 0;
 }
 
@@ -115,7 +118,7 @@ int sysReleaseMutex(uint64_t mutex, uint64_t rdx, uint64_t rcx) {
 }
 
 int sysUpMutex(uint64_t mutex, uint64_t rdx, uint64_t rcx) {
-	mutexUp((int) mutex);
+	mutexUp((int) mutex, getpid());
 	return 0;
 }
 
