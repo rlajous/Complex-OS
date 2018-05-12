@@ -5,35 +5,11 @@
 
 extern int int80(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx);
 
-int addBackgroundProcess(char * filename, int argc, char * argv[]);
+void clear();
 
-int getpid();
+void echo(int echoOn);
 
-void deleteChannel(int recipientPid);
-
-int createChannel(int recipientPid);
-
-int receive(int senderPid, char * buffer, int length);
-
-int createMutex(char * name);
-
-int createSemaphore(char * name);
-
-void mutexUp(int mutex);
-
-void mutexDown(int mutex);
-
-void releaseMutex(int mutex);
-
-void signal(int semaphore);
-
-void wait(int semaphore);
-
-void releaseSemaphore(int semaphore);
-
-int runProcess(void * entryPoint, int argc, char * argv[]);
-
-void kill(int pid);
+void writeCharAtScreenPos(char ch, int x, int y);
 
 int itoa(int value, char * buffer, int base);
 

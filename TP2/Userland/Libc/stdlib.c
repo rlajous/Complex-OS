@@ -1,64 +1,15 @@
 #include <stdlib.h>
 
-
-void kill(int pid) {
-  int80(8,(uint64_t) pid,0,0);
+void clear() {
+  int80(2,0,0,0);
 }
 
-int addBackgroundProcess(char * filename, int argc, char * argv[]) {
-  return int80(11, (uint64_t) filename, argc, (uint64_t) argv);
+void echo(int echoOn) {
+  int80(6,echoOn,0,0);
 }
 
-int getpid() {
- return int80(10, 0,0,0); 
-}
-
-void deleteChannel(int recipientPid) {
- int80(21, (uint64_t) recipientPid, 0, 0); 
-}
-
-int createChannel(int recipientPid) {
- return int80(18, (uint64_t) recipientPid, 0, 0); 
-}
-
-int receive(int senderPid, char * buffer, int length) {
-  return int80(20, (uint64_t) senderPid, (uint64_t) buffer, (uint64_t) length);
-}
-
-int createMutex(char * name) {
-  return int80(14, (uint64_t) name, 0, 0);
-}
-
-int createSemaphore(char * name) {
-  return int80(24, (uint64_t) name, 0, 0);
-}
-
-void mutexUp(int mutex) {
-  int80(16, (uint64_t) mutex, 0, 0);
-}
-
-void mutexDown(int mutex) {
-  int80(17, (uint64_t) mutex, 0, 0);
-}
-
-void releaseMutex(int mutex) {
-  int80(15, (uint64_t) mutex, 0, 0);
-}
-
-void signal(int semaphore) {
-  int80(26, (uint64_t) semaphore, 0, 0);
-}
-
-void wait(int semaphore) {
-  int80(27, (uint64_t) semaphore, 0, 0);
-}
-
-void releaseSemaphore(int semaphore) {
-  int80(25, (uint64_t) semaphore, 0, 0);
-}
-
-int runProcess(void * entryPoint, int argc, char * argv[]) {
-  return int80(23, (uint64_t) entryPoint, argc, (uint64_t) argv);
+void writeCharAtScreenPos(char ch, int x, int y) {
+  int80(22, ch, x, y);
 }
 
 /*void * malloc(unsigned int size) {
