@@ -36,7 +36,7 @@ int createSemaphore(int pid, char * name) {
     semaphore = firstAvailableSemaphore;
     memcpy(semaphores[semaphore].name, name, length);
     semaphores[semaphore].pid = pid;
-    mutex = getMutex(pid, name);
+    mutex = getMutex(name, pid);
     if(mutex == MUTEX_CREATION_ERROR)
       semaphore = SEM_CREATION_ERROR;
     else {
@@ -126,7 +126,7 @@ void wait(int semaphore, int pid) {
     semaphores[semaphore].value--;
 
     if(semaphores[semaphore].value < 0) {
-      added = addToBlocked(semaphore, pid);
+      added = addToSemaphoreBlocked(semaphore, pid);
       if (added != FULL_LIST) {
         blockProcess(pid);
         mutexUp(semaphores[semaphore].mutex, pid);
@@ -170,4 +170,22 @@ int unlockSemaphoreProcess(int semaphore) {
   }
 
   return unlocked;
+}
+
+void removePidFromSemaphores(int pid) {
+  int i, j;
+
+  for(i = 0 ; i < MAX_SEMAPHORES ; i++){
+    if(semaphores[i].pid == pid) {
+      releaseSemaphore(pid, i);
+    }
+
+    for(j = 0; j < MAX_BLOCKED; j++) {
+      if (semaphores[i].blocked[j] == pid) {
+        semaphores[i].blocked[j] = NOT_USED;
+        semaphores[i].blockedQuantity--;
+        unblockProcess(pid);
+      }
+    }
+  }
 }

@@ -12,6 +12,7 @@ void * tickHandler();
 extern void irq0Handler();
 extern void irq1Handler();
 extern void int80Handler();
+extern void yieldHandler();
 extern void sti();
 extern void cli();
 extern void setPicMaster(uint8_t mask);

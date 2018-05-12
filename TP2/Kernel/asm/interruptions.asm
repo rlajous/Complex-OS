@@ -6,6 +6,7 @@ GLOBAL setPicMaster
 GLOBAL setPicSlave
 GLOBAL int80Handler
 GLOBAL yield
+GLOBAL yieldHandler
 
 %include "./asm/macros.m"
 
@@ -65,20 +66,10 @@ setPicSlave:
 	setPicMask 0xA1
 
 yield:
-	mov rax,rsp
+    int 40h
+    ret
 
-	push QWORD 0
-	push QWORD 0
-	push rax
-	pushfq
-	push QWORD 0x008
-	push .ret
-
-    jmp .next
-.ret:
-	ret
-
-.next:
+yieldHandler:
     pushaq
 
     mov rdi, rsp
@@ -93,4 +84,5 @@ yield:
     popaq
     iretq
 
+section .bss
 brax    resb 8

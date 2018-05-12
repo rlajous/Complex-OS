@@ -71,6 +71,7 @@ void iSetHandler(int index, uint64_t handler) {
 void setupIDT() {
 	iSetHandler(0x20, (uint64_t) &irq0Handler);
 	iSetHandler(0x21, (uint64_t) &irq1Handler);
+	iSetHandler(0x40, (uint64_t) &yieldHandler);
 	iSetHandler(0x80, (uint64_t) &int80Handler);
 
 	sysCallsSetup();
