@@ -3,7 +3,7 @@
 
 int main(int argc, char *argv[]) {
 
-	int senderPid;
+	/*int senderPid;
 	int consumerNumber;
 	char buffer[20];
 
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
   while(1) {
  		 	receive(senderPid, buffer, 8);
  		 	printf("Consumer %d consumed: %s\n", consumerNumber,buffer);
-  }
+  }*/
   
   return 0;
 }

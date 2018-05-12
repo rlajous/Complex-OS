@@ -2,7 +2,7 @@ include ../Makefile.inc
 
 MODULE=0002-sampleCodeModule.bin
 SOURCES=$(wildcard [^_]*.c)
-LOADER=../Loader/module.ld ../Loader/_loader.c
+LOADER=./module.ld ../Loader/_loader.c
 
 all: $(MODULE)
 

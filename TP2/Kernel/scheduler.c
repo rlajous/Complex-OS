@@ -36,7 +36,7 @@ void * nextProcess() {
   } while(processes[next].process->state != READY && first != next);
 
   current = next;
-  copyModule(processes[current].process->entryPoint);
+  //copyModule(processes[current].process->entryPoint);
   quantum = QUANTUM;
   processes[current].process->state = RUNNING;
   return getCurrentStack();

@@ -1,9 +1,9 @@
 include ../Makefile.inc
 
-MODULE=0012-consumer.bin
+MODULE=0012-messageTest.bin
 SOURCES=$(wildcard [^_]*.c)
 LIBC=$(wildcard ../Libc/*.o)
-LOADER=../Loader/module.ld ../Loader/_loader.c
+LOADER=./module.ld ../Loader/_loader.c
 
 all: $(MODULE)
 

@@ -7,9 +7,9 @@
 
 static void * const executableMemoryAddress = (void*)0x1000000;
 static void * const moduleAddressesStart = (void*)0x0E00000;
-static int executable = -1;
+//static int executable = -1;
 
-module_t modules[] = {{"shell"}, {"sampleDataModule"}, {"sampleCodeModule"}, {"ps"}, {"help"}, {"date"}, {"time"}, {"clear"}, {"echo"}, {"kill"}, {"prodcons"}, {"snek"} ,{"consumer"} ,{0}};
+module_t modules[] = {{"shell"}, {"sampleDataModule"}, {"sampleCodeModule"}, {"ps"}, {"help"}, {"date"}, {"time"}, {"clear"}, {"echo"}, {"kill"}, {"prodcons"}, {"snek"} ,{"messageTest"} ,{0}};
 /*char* moduleNames[] = {"shell", "sampleDataModule", "sampleCodeModule", "hello", "help", "date", "time", "clear", "echo",0};
 void * moduleAddresses[9] = {(void *)0x0E00000, (void *)0x1000000, (void *)0x1200000, (void *)0x1400000,
 	(void *)0x1600000, (void *)0x1800000, (void *)0x1A00000, (void *)0x1C00000, (void *)0x1E00000};*/
@@ -40,13 +40,13 @@ int getModule(void * moduleAddress) {
   return -1;
 }
 
-void copyModule(void *moduleAddress) {
+/*void copyModule(void *moduleAddress) {
   int index = getModule(moduleAddress);
   if(index != -1 && index != executable) {
     memcpy(executableMemoryAddress, modules[index].address, modules[index].size);
     executable = index;
   }
-}
+}*/
 
 int addModuleProcessBackground(int moduleIndex, int argc, char **argv) {
   int ret;

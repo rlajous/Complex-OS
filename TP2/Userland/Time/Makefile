@@ -3,7 +3,7 @@ include ../Makefile.inc
 MODULE=0006-time.bin
 SOURCES=$(wildcard [^_]*.c)
 LIBC=$(wildcard ../Libc/*.o)
-LOADER=../Loader/module.ld ../Loader/_loader.c
+LOADER=./module.ld ../Loader/_loader.c
 
 all: $(MODULE)
 

@@ -21,7 +21,7 @@ static void loadModule(uint8_t ** module, module_t * moduleStruct, void ** lastM
 {
 	uint32_t moduleSize = readUint32(module);
 	moduleStruct->address = *lastModule;
-	*lastModule += moduleSize;
+	*lastModule += 0x0100000/*moduleSize*/;
 	ncPrintHex((uint64_t)*lastModule);
 	ncPrint("  Will copy module at 0x");
 	ncPrintHex((uint64_t)*module);
