@@ -10,6 +10,7 @@ static int processQuantity = 0;
 static int quantum = QUANTUM;
 static void * schedulerAuxiliaryStack;
 static int changeLock = 0;
+static int lockQuantumExceded = 0;
 
 
 void initializeScheduler() {
@@ -24,8 +25,10 @@ void * nextProcess() {
   int next = current;
   int first = next;
 
-  if(changeLock == 1)
+  if(changeLock == 1) {
+    lockQuantumExceded = 1;
     return getCurrentStack();
+  }
 
   if(processes[current].process != NULL && processes[current].process->state != BLOCKED) {
     processes[current].process->state = READY;
@@ -224,17 +227,43 @@ void getProcesses(char * buffer, int size) {
         int length;
 
         if(processes[k].process->state == RUNNING)
-          state = "Running\n";
+          state = "Running";
         else if(processes[k].process->state == READY)
-          state = "Ready\n";
+          state = "Ready";
         else
-          state = "Blocked\n";
+          state = "Blocked";
 
         length = strlen(state);
         memcpy(buffer + j, state, length);
         j += length;
         size -= length;
       }
+
+    if(size > 0) {
+      memcpy(buffer + j, ", Stack: 0x", 11);
+      j += 11;
+      size -= 11;
+    }
+
+    if(size > 0) {
+      length = uintToBase((uint64_t) processes[k].process->memoryBase, buffer + j, 16);
+      j += length;
+      size -= length;
+    }
+
+    if(size > 0) {
+      char * status;
+
+      if(processes[k].process == foreground)
+        status = ", Fg\n";
+      else
+        status = ", Bg\n";
+
+      length = strlen(status);
+      memcpy(buffer + j, status, length);
+      j += length;
+      size -= length;
+    }
       k = processes[k].next;
   }
   if(j < size)
@@ -257,4 +286,7 @@ void lock() {
 
 void unlock() {
   changeLock = 0;
+  if(testAndSetLock(&lockQuantumExceded)) {
+    yield();
+  }
 }

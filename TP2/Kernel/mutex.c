@@ -155,11 +155,14 @@ void mutexUp(int mutex, int pid) {
 
   int unlocked = 0;
 
+  lock();
+
   if(isValidMutex(mutex) && mutexes[mutex].lockPid == pid) {
     unlocked = unlockProcess(mutex);
     if (unlocked == 0)
       mutexes[mutex].value = UNLOCKED;
   }
+  unlock();
 }
 
 int unlockProcess(int mutex) {
