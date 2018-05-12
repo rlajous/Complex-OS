@@ -132,7 +132,7 @@ void mutexDown(int mutex, int pid) {
   if(isValidMutex(mutex)) {
     locked = testAndSetLock(&mutexes[mutex].value);
 
-    if (locked == BLOCKED) {
+    if (locked == LOCKED) {
       added = addToBlocked(mutex, pid);
       if (added != FULL_LIST) {
         blockProcess(pid);
@@ -185,4 +185,26 @@ int unlockProcess(int mutex) {
   }
 
   return unlocked;
+}
+
+void removePidFromMutexes(int pid) {
+  int i, j;
+
+  for(i = 0 ; i < MAX_MUTEXES ; i++){
+    if(mutexes[i].pid == pid) {
+      releaseMutex(pid, i);
+    }
+
+    if(mutexes[i].lockPid == pid) {
+      mutexUp(i, pid);
+    }
+
+    for(j = 0; j < MAX_BLOCKED; j++) {
+      if (mutexes[i].blocked[j] == pid) {
+        mutexes[i].blocked[j] = NOT_USED;
+        mutexes[i].blockedQuantity--;
+        unblockProcess(pid);
+      }
+    }
+  }
 }

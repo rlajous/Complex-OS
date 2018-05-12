@@ -38,4 +38,6 @@ void signal(int semaphore);
 
 int unlockSemaphoreProcess(int semaphore);
 
+void removePidFromSemaphores(int pid);
+
 #endif

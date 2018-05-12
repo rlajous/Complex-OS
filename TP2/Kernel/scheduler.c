@@ -1,6 +1,7 @@
 #include <scheduler.h>
 #include <process.h>
 #include <terminal.h>
+#include <semaphore.h>
 
 static roundRobinNode_t processes[MAX_PROCESSES];
 static int firstAvailableSpace = 0;
@@ -153,6 +154,8 @@ void killProcess(int pid) {
       unblockProcess(2);
     }
     removeProcess(processes[index].process);
+    removePidFromMutexes(pid);
+    removePidFromSemaphores(pid);
   }
 }
 

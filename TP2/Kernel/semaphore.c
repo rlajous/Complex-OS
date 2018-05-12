@@ -144,10 +144,14 @@ void wait(int semaphore, int pid) {
 
 void signal(int semaphore) {
 
+  int pid = getpid();
+
   if(isValidSemaphore(semaphore)) {
+    mutexDown(semaphores[semaphore].mutex, pid);
     unlockSemaphoreProcess(semaphore);
 
     semaphores[semaphore].value++;
+    mutexUp(semaphores[semaphore].mutex, pid);
   }
 }
 
@@ -175,6 +179,8 @@ int unlockSemaphoreProcess(int semaphore) {
 void removePidFromSemaphores(int pid) {
   int i, j;
 
+  lock();
+
   for(i = 0 ; i < MAX_SEMAPHORES ; i++){
     if(semaphores[i].pid == pid) {
       releaseSemaphore(pid, i);
@@ -184,8 +190,10 @@ void removePidFromSemaphores(int pid) {
       if (semaphores[i].blocked[j] == pid) {
         semaphores[i].blocked[j] = NOT_USED;
         semaphores[i].blockedQuantity--;
+        semaphores[i].value++;
         unblockProcess(pid);
       }
     }
   }
+  unlock();
 }

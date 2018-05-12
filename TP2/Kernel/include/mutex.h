@@ -12,7 +12,6 @@
 #define FULL_LIST -3
 #define LOCKED 0
 #define UNLOCKED 1
-#define BLOCKED 0
 
 typedef struct {
     int pid;
@@ -46,5 +45,7 @@ void mutexDown(int mutex, int pid);
 void mutexUp(int mutex, int pid);
 
 int unlockProcess(int mutex);
+
+void removePidFromMutexes(int pid);
 
 #endif
