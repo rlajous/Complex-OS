@@ -83,6 +83,6 @@ startFirstProcess:
 testAndSetLock:
     mov rax, 0
 
-    lock xchg rax, [rdi]
+    xchg rax, [rdi]
 
     ret

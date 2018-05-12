@@ -160,6 +160,33 @@ int sysWriteCharAtScreenPos(uint64_t ch, uint64_t x, uint64_t y){
 	return 0;
 }
 
+int sysRunProcess(uint64_t entryPoint, uint64_t argc, uint64_t argv) {
+  int ret;
+  argv = (uint64_t)backupArguments(argc, (char **)argv);
+  process_t * process = createProcess((void *) entryPoint, argc, (char **) argv, ((char **) argv)[0]);
+  ret = addProcess(process);
+  yield();
+  return ret;
+}
+
+int sysCreateSemaphore(uint64_t name, uint64_t rdx, uint64_t rcx) {
+	return getSemaphore((char *) name, getpid());
+}
+
+int sysReleaseSemaphre(uint64_t mutex, uint64_t rdx, uint64_t rcx) {
+	return releaseSemaphore(getpid(), (int)mutex);
+}
+
+int sysSignal(uint64_t semaphore, uint64_t rdx, uint64_t rcx) {
+	signal((int) semaphore);
+	return 0;
+}
+
+int sysWait(uint64_t semaphore, uint64_t rdx, uint64_t rcx) {
+	wait((int) semaphore, getpid());
+	return 0;
+}
+
 int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx) {
 	if(rdi >= SYSCALLS)
 		return -1;
@@ -195,4 +222,10 @@ void sysCallsSetup(){
 	sysCalls[21] = &sysDeleteChannel;
 
 	sysCalls[22] = &sysWriteCharAtScreenPos;
+  sysCalls[23] = &sysRunProcess;
+
+	sysCalls[24] = &sysCreateSemaphore;
+	sysCalls[25] = &sysReleaseSemaphre;
+	sysCalls[26] = &sysSignal;
+	sysCalls[27] = &sysWait;
 }

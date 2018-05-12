@@ -15,6 +15,24 @@ int createChannel(int recipientPid);
 
 int receive(int senderPid, char * buffer, int length);
 
+int createMutex(char * name);
+
+int createSemaphore(char * name);
+
+void mutexUp(int mutex);
+
+void mutexDown(int mutex);
+
+void releaseMutex(int mutex);
+
+void signal(int semaphore);
+
+void wait(int semaphore);
+
+void releaseSemaphore(int semaphore);
+
+int runProcess(void * entryPoint, int argc, char * argv[]);
+
 void kill(int pid);
 
 int itoa(int value, char * buffer, int base);
