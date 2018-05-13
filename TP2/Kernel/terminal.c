@@ -1,6 +1,7 @@
 #include <terminal.h>
 #include <lib.h>
 #include <video.h>
+#include <scheduler.h>
 
 
 static video_row* video = (video_row*) 0xB8000;
@@ -372,6 +373,7 @@ void writeBuffer(char ch) {
 			writeIndex = startIndex = endIndex;
 			if(echo)
 				printc(ch);
+			unblockRead();
 			break;
 		default:
 			if(size < BUFFER_SIZE-1) {					//Dejar un espacio para \n
@@ -393,6 +395,8 @@ void writeBuffer(char ch) {
 
 char readBuffer() {
 	char ch = 0;
+	if(readIndex >= startIndex)
+	  blockRead();
 	if(readIndex < startIndex) {
 		ch = kbBuffer[readIndex];
 		readIndex++;

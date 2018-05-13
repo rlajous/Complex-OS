@@ -57,4 +57,8 @@ void lock();
 
 void unlock();
 
+void blockRead();
+
+void unblockRead();
+
 #endif

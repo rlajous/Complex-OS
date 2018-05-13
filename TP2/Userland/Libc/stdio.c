@@ -18,9 +18,7 @@ void putcharatpos(char ch, int x, int y){
 
 char getchar() {
 	char ch;
-	do
-		read(0, &ch, 1);
-	while(ch == '\0');
+  read(0, &ch, 1);
 	return ch;
 }
 

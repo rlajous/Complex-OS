@@ -303,3 +303,16 @@ void unlock() {
     yield();
   }
 }
+
+void blockRead() {
+  if(foreground->state != BLOCKED) {
+    foreground->state = BLOCKED;
+    yield();
+  }
+}
+
+void unblockRead() {
+  if(foreground->state == BLOCKED) {
+    foreground->state = READY;
+  }
+}
