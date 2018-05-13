@@ -5,10 +5,10 @@
 
 void kill(int pid);
 
-int addBackgroundProcess(char * filename, int argc, char * argv[]);
+int runModule(char * filename, int argc, char * argv[], int background);
 
 int getpid();
 
-int runProcess(void * entryPoint, int argc, char * argv[]);
+int runProcess(void * entryPoint, int argc, char * argv[], int background);
 
 #endif

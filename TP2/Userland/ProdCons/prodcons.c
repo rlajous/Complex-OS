@@ -75,7 +75,7 @@ int processControl(char option) {
 			strncpy(name, "producer", 9);
 			itoa(producerIndex, num, 10);
 			printf("Added Producer\n");
-			producerPid[producerIndex - 1] = runProcess(&producer, 2, arguments);
+			producerPid[producerIndex - 1] = runProcess(&producer, 2, arguments, 1);
 			break;
 
 		case 'k':
@@ -91,7 +91,7 @@ int processControl(char option) {
 			strncpy(name, "consumer", 9);
 			itoa(consumerIndex, num, 10);
 			printf("Added Consumer\n");
-      consumerPid[consumerIndex - 1] = runProcess(&consumer, 2, arguments);
+      consumerPid[consumerIndex - 1] = runProcess(&consumer, 2, arguments, 1);
 			break;
 
 		case 'x':

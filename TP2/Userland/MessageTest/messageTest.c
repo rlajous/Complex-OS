@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 
   itoa(length, len, 10);
 
-  recipientPid = runProcess(&otherProcess, 3, arguments);
+  recipientPid = runProcess(&otherProcess, 3, arguments, 1);
 
   createChannel(recipientPid);
 

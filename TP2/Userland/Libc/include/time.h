@@ -15,7 +15,7 @@ typedef struct {
     int year;
 } date;
 
-extern int int80(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx); 
+extern int int80(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
 void updateTime(time * currentTime);
 

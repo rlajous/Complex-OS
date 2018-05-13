@@ -1,20 +1,20 @@
 #include <stdlib.h>
 
 void clear() {
-  int80(2,0,0,0);
+  int80(2,0,0,0,0);
 }
 
 void echo(int echoOn) {
-  int80(6,echoOn,0,0);
+  int80(6,echoOn,0,0,0);
 }
 
 void writeCharAtScreenPos(char ch, int x, int y) {
-  int80(22, ch, x, y);
+  int80(22, ch, x, y,0);
 }
 
 /*void * malloc(unsigned int size) {
 	void * address;
-	int80(8,(uint64_t)&address,size,0);
+	int80(8,(uint64_t)&address,size,0,0);
 	return address;
 }
 

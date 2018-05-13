@@ -40,30 +40,15 @@ int getModule(void * moduleAddress) {
   return -1;
 }
 
-/*void copyModule(void *moduleAddress) {
-  int index = getModule(moduleAddress);
-  if(index != -1 && index != executable) {
-    memcpy(executableMemoryAddress, modules[index].address, modules[index].size);
-    executable = index;
+void * getModuleAddress(char * filename) {
+  int i = 0;
+  while(modules[i].name != 0){
+    if(strcmp((const char *)filename, modules[i].name) == 0) {
+      return modules[i].address;
+    }
+    i++;
   }
-}*/
-
-int addModuleProcessBackground(int moduleIndex, int argc, char **argv) {
-  int ret;
-  process_t * process = createProcess(modules[moduleIndex].address, argc, argv, modules[moduleIndex].name);
-  ret = addProcess(process);
-  yield();
-  return ret;
-}
-
-int addModuleProcess(int moduleIndex, int argc, char **argv) {
-  int ret;
-  process_t * process = createProcess(modules[moduleIndex].address, argc, argv, modules[moduleIndex].name);
-  ret = addProcess(process);
-  setForeground(process->pid);
-  blockProcess(2);
-  yield();
-  return ret;
+  return NULL;
 }
 
 char** backupArguments(int argc, char * argv[]) {

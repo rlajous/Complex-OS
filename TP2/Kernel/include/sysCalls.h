@@ -11,63 +11,63 @@
 #include <buddyMemoryAllocator.h>
 #include <channel.h>
 
-#define SYSCALLS 28
+#define SYSCALLS 27
 
-typedef int (*sys)(uint64_t rsi, uint64_t rdx, uint64_t rcx);
+typedef int (*sys)(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysRead(uint64_t fileDescriptor, uint64_t buffer, uint64_t size);
+int sysRead(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t r8);
 
-int sysWrite(uint64_t fileDescriptor, uint64_t buffer, uint64_t size);
+int sysWrite(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t r8);
 
-int sysSetTimeZone(uint64_t timeZone, uint64_t rdx, uint64_t rcx);
+int sysSetTimeZone(uint64_t timeZone, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysGetTime(uint64_t hour, uint64_t minute, uint64_t seconds);
+int sysGetTime(uint64_t hour, uint64_t minute, uint64_t seconds, uint64_t r8);
 
-int sysGetDate(uint64_t day, uint64_t month, uint64_t year);
+int sysGetDate(uint64_t day, uint64_t month, uint64_t year, uint64_t r8);
 
-int sysEcho(uint64_t echoOn, uint64_t rdx, uint64_t rcx);
+int sysEcho(uint64_t echoOn, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysExec(uint64_t filename, uint64_t argc, uint64_t argv);
+int sysRunModule(uint64_t filename, uint64_t argc, uint64_t argv, uint64_t background);
 
-int sysKill(uint64_t pid, uint64_t rdx, uint64_t rcx);
+int sysKill(uint64_t pid, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysPs(uint64_t rsi, uint64_t rdx, uint64_t rcx);
+int sysPs(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysGetPid(uint64_t rsi, uint64_t rdx, uint64_t rcx);
+int sysGetPid(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysAllocateMemory(uint64_t address, uint64_t size, uint64_t rcx);
+int sysAllocateMemory(uint64_t address, uint64_t size, uint64_t rcx, uint64_t r8);
 
-int sysFreeMemory(uint64_t address, uint64_t rdx, uint64_t rcx);
+int sysFreeMemory(uint64_t address, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysCreateMutex(uint64_t name, uint64_t rdx, uint64_t rcx);
+int sysCreateMutex(uint64_t name, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysReleaseMutex(uint64_t mutex, uint64_t rdx, uint64_t rcx);
+int sysReleaseMutex(uint64_t mutex, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysUpMutex(uint64_t rsi, uint64_t rdx, uint64_t rcx);
+int sysUpMutex(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysDownMutex(uint64_t rsi, uint64_t rdx, uint64_t rcx);
+int sysDownMutex(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysCreateChannel(uint64_t rsi, uint64_t rdx, uint64_t rcx);
+int sysCreateChannel(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysSend(uint64_t rsi, uint64_t rdx, uint64_t rcx);
+int sysSend(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysReceive(uint64_t rsi, uint64_t rdx, uint64_t rcx);
+int sysReceive(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysDeleteChannel(uint64_t rsi, uint64_t rdx, uint64_t rcx);
+int sysDeleteChannel(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysWriteCharAtScreenPos(uint64_t ch, uint64_t x, uint64_t y);
+int sysWriteCharAtScreenPos(uint64_t ch, uint64_t x, uint64_t y, uint64_t r8);
 
-int sysRunProcess(uint64_t entryPoint, uint64_t argc, uint64_t argv);
+int sysRunProcess(uint64_t entryPoint, uint64_t argc, uint64_t argv, uint64_t background);
 
-int sysCreateSemaphore(uint64_t name, uint64_t rdx, uint64_t rcx);
+int sysCreateSemaphore(uint64_t name, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysReleaseSemaphre(uint64_t mutex, uint64_t rdx, uint64_t rcx);
+int sysReleaseSemaphre(uint64_t mutex, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysSignal(uint64_t semaphore, uint64_t rdx, uint64_t rcx);
+int sysSignal(uint64_t semaphore, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysWait(uint64_t semaphore, uint64_t rdx, uint64_t rcx);
+int sysWait(uint64_t semaphore, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
-int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx);
+int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
 void sysCallsSetup();
 

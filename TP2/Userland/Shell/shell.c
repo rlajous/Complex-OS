@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <process.h>
 
-int execv(char *filename, int argc, char *argv[]);
+int executeCommand(char * name, int argc, char *argv[]);
 int parseArguments(char * string);
 
 char * arguments[100];
@@ -12,32 +12,33 @@ int main(int argc, char *argv[]) {
   while(1) {
     printf("$> ");
     scanf("%s", buffer);
-    if(execv(buffer,parseArguments(buffer),arguments) == -1)
+    if(executeCommand(buffer,parseArguments(buffer),arguments) == -1)
       printf("%s: Invalid Module\n", buffer);
   }
 
   return 0;
 }
 
-int execv(char *filename, int argc, char *argv[]) {
-  char* string = filename;
+int executeCommand(char * name, int argc, char *argv[]) {
+  char* string = name;
   while(*string != '\0') {
     string++;
   }
   if(*(string - 1) == '&') {
     *(string - 1) = '\0';
-    return addBackgroundProcess(filename, argc, argv);
+    return runModule(name, argc, argv, 1);
   }
-	return int80(7, (uint64_t)filename, argc, (uint64_t)argv);
+	return runModule(name, argc, argv, 0);
 }
 
 int parseArguments(char * string) {
   int argc = 0;
-  char * previous;
+  char * previous = string;
   char c;
   while((c=*string) != ' ' && c != '\0' )
     string++;
   *string = '\0';
+  arguments[argc++] = previous;
   previous = ++string;
 
   if(c != '\0') {

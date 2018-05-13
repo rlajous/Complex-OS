@@ -26,9 +26,7 @@ void startSystem();
 
 int getModule(void * moduleAddress);
 
-int addModuleProcessBackground(int moduleIndex, int argc, char **argv);
-
-int addModuleProcess(int moduleIndex, int argc, char **argv);
+void * getModuleAddress(char * filename);
 
 void * initializeKernelBinary();
 

@@ -1,11 +1,11 @@
 #include <stdio.h>
 
 void write(int fd, char* buffer, int size) {
-	int80(1,fd,(uint64_t)buffer,size);
+	int80(1,fd,(uint64_t)buffer,size,0);
 }
 
 void read(int fd, char* buffer, int size) {
-	int80(0,fd,(uint64_t)buffer,size);
+	int80(0,fd,(uint64_t)buffer,size,0);
 }
 
 void putchar(char c) {
@@ -13,7 +13,7 @@ void putchar(char c) {
 }
 
 void putcharatpos(char ch, int x, int y){
-	int80(22, ch, x, y);
+	int80(22, ch, x, y,0);
 }
 
 char getchar() {
