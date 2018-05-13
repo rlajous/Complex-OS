@@ -16,9 +16,9 @@ void read(int fd, char* buffer, int size);
 
 void putchar(char c);
 
-void putcharatpos(char ch, int x, int y);
-
 char getchar();
+
+char getch();
 
 int printf(const char* format, ...);
 

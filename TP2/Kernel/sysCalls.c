@@ -5,15 +5,19 @@ extern module_t modules[];
 
 static sys sysCalls[SYSCALLS];
 
-int sysRead(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t r8) {
+int sysRead(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t noBlock) {
 	int index = 0;
 	if(!isForeground(getpid())) {
 		changeProcessState(getpid(), BLOCKED);
 		yield();
 	}
 	if(fileDescriptor == 0) {
-		while(index++ < size)
-			*((char*)buffer++)= readBuffer();
+		while(index++ < size) {
+		  if(noBlock)
+        *((char *) buffer++) = nonBlockRead();
+		  else
+        *((char *) buffer++) = readBuffer();
+    }
 	}
 	return 0;
 }

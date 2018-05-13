@@ -407,6 +407,18 @@ char readBuffer() {
 	return ch;
 }
 
+char nonBlockRead() {
+  char ch = 0;
+  if(readIndex < writeIndex) {
+    ch = kbBuffer[readIndex];
+    readIndex++;
+    if(readIndex == BUFFER_SIZE)
+      readIndex = 0;
+    size--;
+  }
+  return ch;
+}
+
 void keyboardLeft() {
 	if(writeIndex != startIndex) {
 		writeIndex--;

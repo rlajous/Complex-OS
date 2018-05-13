@@ -12,13 +12,15 @@ void putchar(char c) {
 	write(1, &c, 1);
 }
 
-void putcharatpos(char ch, int x, int y){
-	int80(22, ch, x, y,0);
-}
-
 char getchar() {
 	char ch;
   read(0, &ch, 1);
+	return ch;
+}
+
+char getch() {
+	char ch;
+	int80(0,0,(uint64_t)&ch,1,1);
 	return ch;
 }
 

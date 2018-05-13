@@ -63,6 +63,8 @@ void writeBuffer(char ch);
 
 char readBuffer();
 
+char nonBlockRead();
+
 void keyboardLeft();
 
 void keyboardRight();

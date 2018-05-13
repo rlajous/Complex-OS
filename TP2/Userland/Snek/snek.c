@@ -1,15 +1,10 @@
 #include "snek.h"
-
-char buffer[] = "dddsssssaaaaawdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd";
-int index = 0;
+#include <stdlib.h>
 
 int main(int argc, char *argv[]) {
 	player_t player;
 	tail_t tail;
-	snack_t snack; 
-
-	//Initialize using malloc? Or leave it on stack?
-	int fpsDelay = 600000;
+	snack_t snack;
 
 	int playerAlive = 1;
 	char inputKey = '0';
@@ -29,26 +24,22 @@ int main(int argc, char *argv[]) {
 	snack.position.x = 10;
 	snack.position.y = 10;
 
-	//Disable displaying characters on screen
-	//int80(6,0,0,0,0);
+	echo(0);
 	while (playerAlive){
-		if (--fpsDelay <= 0){
-			handleInput(&inputKey, &player);
-			update(&player, &tail, &snack, &playerAlive);
-			draw(&player, &tail, &snack);
-			fpsDelay = 600000;
-		}
+	  sleep(55);
+	  handleInput(&inputKey, &player);
+	  update(&player, &tail, &snack, &playerAlive);
+	  draw(&player, &tail, &snack);
 	}
 
-	int80(6,0,0,0,0); //Enable displaying characters on screen again
-	int80(2,0,0,0,0); //Clear Screen syscall
+	echo(1);
+	clear();
 
 	return 0;
 }
 
 void handleInput(char* inputKey, player_t* player){
-	int80(0, 0, (uint64_t) inputKey, 1,0);
-	putchar(*inputKey);
+	*inputKey = getch();
 	switch(*inputKey){
 		case 'w':
 			(*player).speed.x = 0;
@@ -66,8 +57,6 @@ void handleInput(char* inputKey, player_t* player){
 			(*player).speed.x = -1;
 			(*player).speed.y = 0;
 			break;
-		default:
-			putchar(*inputKey);
 	}	
 }
 
@@ -79,12 +68,12 @@ void update(player_t* player, tail_t* tail, snack_t* snack, int* playerAlive){
 }
 
 void draw(player_t* player, tail_t* tail, snack_t* snack){
-	int80(2,0,0,0,0); //Clear Screen syscall
+	clear();
 	for (int i = (*tail).oldestElemIndex; i < (*tail).youngestElemIndex; i++){
-		putcharatpos((*tail).sprite, (*tail).tailPositions[i].x, (*tail).tailPositions[i].y);
+		writeCharAtScreenPos((*tail).sprite, (*tail).tailPositions[i].x, (*tail).tailPositions[i].y);
 	}
-	putcharatpos((*player).sprite, (*player).position.x, (*player).position.y);
-	putcharatpos((*snack).sprite, (*snack).position.x, (*snack).position.y);
+	writeCharAtScreenPos((*player).sprite, (*player).position.x, (*player).position.y);
+	writeCharAtScreenPos((*snack).sprite, (*snack).position.x, (*snack).position.y);
 }
 
 void updatePlayer(player_t* player, int* playerAlive){
