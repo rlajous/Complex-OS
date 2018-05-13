@@ -16,6 +16,7 @@ typedef struct {
     void * memoryBase;
     processState state;
     int pid;
+    int ppid;
     char name[MAX_NAME];
 } process_t;
 

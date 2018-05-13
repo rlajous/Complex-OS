@@ -41,6 +41,8 @@ void killCurrent();
 
 void killProcess(int pid);
 
+void changeChildrenToOrphan(int pid);
+
 int getProcessIndex(int pid);
 
 void changeProcessState(int pid, processState state);

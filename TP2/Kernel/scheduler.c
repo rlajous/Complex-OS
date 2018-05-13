@@ -6,7 +6,6 @@
 static roundRobinNode_t processes[MAX_PROCESSES];
 static int firstAvailableSpace = 0;
 static process_t * foreground = NULL;
-static process_t * previousForeground;
 static int current = 0;
 static int processQuantity = 0;
 static int quantum = QUANTUM;
@@ -149,14 +148,27 @@ void killProcess(int pid) {
   int index = getProcessIndex(pid);
 
   if(index != PID_NOT_FOUND) {
+    changeChildrenToOrphan(pid);
     if(foreground->pid == pid) {
       resetBuffer();
-      setForeground(previousForeground->pid);
+      setForeground(foreground->ppid);
       changeProcessState(foreground->pid, READY);
     }
     removeProcess(processes[index].process);
     removePidFromMutexes(pid);
     removePidFromSemaphores(pid);
+  }
+}
+
+void changeChildrenToOrphan(int pid) {
+  int i;
+  int index = getProcessIndex(pid);
+  int next = current;
+
+  for (i= 0; i < processQuantity; i++) {
+    if(processes[next].process->ppid == pid)
+      processes[next].process->ppid = processes[index].process->ppid;
+    next = processes[next].next;
   }
 }
 
@@ -281,7 +293,7 @@ void getProcesses(char * buffer, int size) {
 }
 
 void setForeground(int pid) {
-  previousForeground = foreground;
+  //previousForeground = foreground;
   foreground = processes[getProcessIndex(pid)].process;
 }
 

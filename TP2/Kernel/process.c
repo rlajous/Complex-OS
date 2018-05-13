@@ -10,6 +10,7 @@ process_t * createProcess(void * entryPoint, int argc, char * argv[], char * nam
 
   process->entryPoint = entryPoint;
   process->pid = nextPid++;
+  process->ppid = getpid();
   process->state = READY;
   process->stack = (void *) (process);
   process->stack = fillStackFrame(entryPoint, process->stack, argc, argv);
