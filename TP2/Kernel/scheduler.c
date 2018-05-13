@@ -279,6 +279,10 @@ void setForeground(int pid) {
   foreground = processes[getProcessIndex(pid)].process;
 }
 
+int getForeground() {
+  return foreground->pid;
+}
+
 int isForeground(int pid) {
   return foreground->pid == pid;
 }

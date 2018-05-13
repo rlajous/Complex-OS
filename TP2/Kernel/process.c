@@ -29,8 +29,12 @@ void deleteProcess(process_t * process) {
 
 void callProcess(int argc, char * argv[], void * entryPoint) {
   ((EntryPoint)(entryPoint))(argc, argv);
-  if(argv != NULL)
+  if(argv != NULL) {
+    while(argc--) {
+      freeMemory(argv[argc]);
+    }
     freeMemory(argv);
+  }
   killCurrent();
   yield();
 }

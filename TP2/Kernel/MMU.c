@@ -5,7 +5,7 @@
 #include <naiveConsole.h>
 #include <process.h>
 
-static void * const executableMemoryAddress = (void*)0x1000000;
+//static void * const executableMemoryAddress = (void*)0x1000000;
 static void * const moduleAddressesStart = (void*)0x0E00000;
 //static int executable = -1;
 
@@ -68,18 +68,19 @@ int addModuleProcess(int moduleIndex, int argc, char **argv) {
 
 char** backupArguments(int argc, char * argv[]) {
   char ** temp = argv;
+  int i;
   if(argc > 0) {
     temp = allocateMemory(argc*sizeof(char **));
     if(temp == NULL)
       return argv;
-    memcpy(temp, argv, argc*sizeof(char **));
 
-    for(int i = 0; i < argc; i++) {
-      size_t len = strlen(temp[i]) + 1;
+    for(i = 0; i < argc; i++) {
+      size_t len = strlen(argv[i]) + 1;
       char * tempArg = allocateMemory(len*sizeof(char));
       if(tempArg == NULL)
         break;
-      memcpy(tempArg, temp[i], len*sizeof(char));
+      memcpy(tempArg, argv[i], len*sizeof(char));
+      temp[i] = tempArg;
     }
   }
   return temp;

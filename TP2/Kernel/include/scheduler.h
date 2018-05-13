@@ -51,6 +51,8 @@ void getProcesses(char * buffer, int size);
 
 void setForeground(int pid);
 
+int getForeground();
+
 int isForeground(int pid);
 
 void lock();

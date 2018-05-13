@@ -24,8 +24,6 @@ int init();
 
 void startSystem();
 
-//void copyModule(void * moduleAddress);
-
 int getModule(void * moduleAddress);
 
 int addModuleProcessBackground(int moduleIndex, int argc, char **argv);
@@ -33,8 +31,6 @@ int addModuleProcessBackground(int moduleIndex, int argc, char **argv);
 int addModuleProcess(int moduleIndex, int argc, char **argv);
 
 void * initializeKernelBinary();
-
-//void * malloc(uint64_t size);
 
 char** backupArguments(int argc, char * argv[]);
 
