@@ -15,9 +15,9 @@
 
 int main(void) {
 	clearScreen();
-	initializeScheduler();
 	setupMutexSystem();
 	initializeHeap();
+	initializeScheduler();
 	initializeTimer();
 	setupSemaphoreSystem();
 	initializeChannels();

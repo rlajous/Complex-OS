@@ -8,7 +8,9 @@ clear: Wipes out the screen\n\
 ps: Prints processes\n\
 prodcons: Shows producer-consumer problem\n\
 messageTest: Tests interprocess communication\n\
-kill: kills pid sent as argument\n\
+kill: Kills pid sent as argument\n\
+snek: Snake game\n\
+help: Prints all commands and uses\n\
 cmd&: Executes command in background\n\
 echo: Prints what you send as arguments\n\
 sampleCodeModule: A sample module";

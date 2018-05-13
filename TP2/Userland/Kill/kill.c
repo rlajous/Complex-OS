@@ -3,8 +3,8 @@
 
 int main(int argc, char *argv[]) {
 	int pid;
-  if(argc > 0) {
-  	parseInt(argv[0], &pid);
+  if(argc > 1) {
+  	parseInt(argv[1], &pid);
   	kill(pid);
   }
 
