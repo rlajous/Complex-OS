@@ -10,8 +10,9 @@
 #include <mutex.h>
 #include <buddyMemoryAllocator.h>
 #include <channel.h>
+#include <timer.h>
 
-#define SYSCALLS 27
+#define SYSCALLS 28
 
 typedef int (*sys)(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8);
 

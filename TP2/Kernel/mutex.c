@@ -135,7 +135,7 @@ void mutexDown(int mutex, int pid) {
     if (locked == LOCKED) {
       added = addToBlocked(mutex, pid);
       if (added != FULL_LIST) {
-        blockProcess(pid);
+        changeProcessState(pid, BLOCKED);
         unlock();
         yield();
       } else {
@@ -176,7 +176,7 @@ int unlockProcess(int mutex) {
   while(i < MAX_BLOCKED && !unlocked) {
     if(mutexes[mutex].blocked[i] != NOT_USED) {
       mutexes[mutex].lockPid = mutexes[mutex].blocked[i];
-      unblockProcess(mutexes[mutex].blocked[i]);
+      changeProcessState(mutexes[mutex].blocked[i], READY);
       mutexes[mutex].blocked[i] = NOT_USED;
       mutexes[mutex].blockedQuantity--;
       unlocked = 1;
@@ -203,7 +203,7 @@ void removePidFromMutexes(int pid) {
       if (mutexes[i].blocked[j] == pid) {
         mutexes[i].blocked[j] = NOT_USED;
         mutexes[i].blockedQuantity--;
-        unblockProcess(pid);
+        changeProcessState(pid, READY);
       }
     }
   }

@@ -43,9 +43,7 @@ void killProcess(int pid);
 
 int getProcessIndex(int pid);
 
-void blockProcess(int pid);
-
-void unblockProcess(int pid);
+void changeProcessState(int pid, processState state);
 
 void getProcesses(char * buffer, int size);
 

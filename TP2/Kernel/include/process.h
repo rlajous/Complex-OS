@@ -8,7 +8,7 @@
 #define PROCESS_INITIAL_PAGES 2
 #define MAX_NAME 50
 
-typedef enum {RUNNING, READY, BLOCKED} processState;
+typedef enum {RUNNING, READY, BLOCKED, SLEEPING} processState;
 
 typedef struct {
     void * stack;

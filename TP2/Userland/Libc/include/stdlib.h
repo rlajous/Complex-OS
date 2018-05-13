@@ -9,6 +9,8 @@ void clear();
 
 void echo(int echoOn);
 
+void sleep(long milliseconds);
+
 void writeCharAtScreenPos(char ch, int x, int y);
 
 int itoa(int value, char * buffer, int base);

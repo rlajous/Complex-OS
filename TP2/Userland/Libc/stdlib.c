@@ -12,6 +12,10 @@ void writeCharAtScreenPos(char ch, int x, int y) {
   int80(22, ch, x, y,0);
 }
 
+void sleep(long milliseconds) {
+  int80(27,(uint64_t) milliseconds,0,0,0);
+}
+
 /*void * malloc(unsigned int size) {
 	void * address;
 	int80(8,(uint64_t)&address,size,0,0);

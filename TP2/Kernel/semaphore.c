@@ -128,7 +128,7 @@ void wait(int semaphore, int pid) {
     if(semaphores[semaphore].value < 0) {
       added = addToSemaphoreBlocked(semaphore, pid);
       if (added != FULL_LIST) {
-        blockProcess(pid);
+        changeProcessState(pid, BLOCKED);
         mutexUp(semaphores[semaphore].mutex, pid);
         yield();
       } else {
@@ -165,7 +165,7 @@ int unlockSemaphoreProcess(int semaphore) {
 
   while(i < MAX_BLOCKED && !unlocked) {
     if(semaphores[semaphore].blocked[i] != NOT_USED) {
-      unblockProcess(semaphores[semaphore].blocked[i]);
+      changeProcessState(semaphores[semaphore].blocked[i], READY);
       semaphores[semaphore].blocked[i] = NOT_USED;
       semaphores[semaphore].blockedQuantity--;
       unlocked = 1;
@@ -191,7 +191,7 @@ void removePidFromSemaphores(int pid) {
         semaphores[i].blocked[j] = NOT_USED;
         semaphores[i].blockedQuantity--;
         semaphores[i].value++;
-        unblockProcess(pid);
+        changeProcessState(pid, READY);
       }
     }
   }

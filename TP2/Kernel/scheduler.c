@@ -5,7 +5,8 @@
 
 static roundRobinNode_t processes[MAX_PROCESSES];
 static int firstAvailableSpace = 0;
-static process_t * foreground;
+static process_t * foreground = NULL;
+static process_t * previousForeground;
 static int current = 0;
 static int processQuantity = 0;
 static int quantum = QUANTUM;
@@ -31,7 +32,7 @@ void * nextProcess() {
     return getCurrentStack();
   }
 
-  if(processes[current].process != NULL && processes[current].process->state != BLOCKED) {
+  if(processes[current].process != NULL && processes[current].process->state == RUNNING) {
     processes[current].process->state = READY;
   }
 
@@ -40,7 +41,6 @@ void * nextProcess() {
   } while(processes[next].process->state != READY && first != next);
 
   current = next;
-  //copyModule(processes[current].process->entryPoint);
   quantum = QUANTUM;
   processes[current].process->state = RUNNING;
   return getCurrentStack();
@@ -135,7 +135,8 @@ void * getEntryPoint() {
 }
 
 void killForeground() {
-  killProcess(foreground->pid);
+  if(foreground != NULL)
+    killProcess(foreground->pid);
   yield();
 }
 
@@ -150,8 +151,8 @@ void killProcess(int pid) {
   if(index != PID_NOT_FOUND) {
     if(foreground->pid == pid) {
       resetBuffer();
-      setForeground(2);
-      unblockProcess(2);
+      setForeground(previousForeground->pid);
+      changeProcessState(foreground->pid, READY);
     }
     removeProcess(processes[index].process);
     removePidFromMutexes(pid);
@@ -173,19 +174,12 @@ int getProcessIndex(int pid) {
   return PID_NOT_FOUND;
 }
 
-void blockProcess(int pid) {
+void changeProcessState(int pid, processState state) {
   int index = getProcessIndex(pid);
 
   if(index != PID_NOT_FOUND) {
-    processes[index].process->state = BLOCKED;
+    processes[index].process->state = state;
   }
-}
-
-void unblockProcess(int pid) {
-  int index = getProcessIndex(pid);
-
-  if(index != PID_NOT_FOUND)
-    processes[index].process->state = READY;
 }
 
 void getProcesses(char * buffer, int size) {
@@ -229,12 +223,23 @@ void getProcesses(char * buffer, int size) {
         char * state;
         int length;
 
-        if(processes[k].process->state == RUNNING)
-          state = "Running";
-        else if(processes[k].process->state == READY)
-          state = "Ready";
-        else
-          state = "Blocked";
+        switch(processes[k].process->state) {
+          case RUNNING:
+            state = "Running";
+            break;
+
+          case READY:
+            state = "Ready";
+            break;
+
+          case BLOCKED:
+            state = "Blocked";
+            break;
+
+          case SLEEPING:
+            state = "Sleeping";
+            break;
+        }
 
         length = strlen(state);
         memcpy(buffer + j, state, length);
@@ -276,6 +281,7 @@ void getProcesses(char * buffer, int size) {
 }
 
 void setForeground(int pid) {
+  previousForeground = foreground;
   foreground = processes[getProcessIndex(pid)].process;
 }
 

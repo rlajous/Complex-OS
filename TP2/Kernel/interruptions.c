@@ -7,6 +7,7 @@
 #include <sysCalls.h>
 #include <rtc.h>
 #include <scheduler.h>
+#include <timer.h>
 
 #pragma pack(push)
 #pragma pack(1)
@@ -31,10 +32,12 @@ void * tickHandler() {
   static int count = 0;
   void * nextRsp;
 
+  decrementTicks();
+
 	count++;
 	nextRsp = schedule();
 
-	if(count == 10) { //Cada 825ms
+	if(count == 10) { //Cada 550ms
 		blinkCursor();
 		count = 0;
 	}

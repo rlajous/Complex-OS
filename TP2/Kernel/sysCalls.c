@@ -8,7 +8,7 @@ static sys sysCalls[SYSCALLS];
 int sysRead(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t r8) {
 	int index = 0;
 	if(!isForeground(getpid())) {
-		blockProcess(getpid());
+		changeProcessState(getpid(), BLOCKED);
 		yield();
 	}
 	if(fileDescriptor == 0) {
@@ -150,7 +150,7 @@ int sysRunProcess(uint64_t entryPoint, uint64_t argc, uint64_t argv, uint64_t ba
 	process_t * process = createProcess((void *) entryPoint, argc, (char **) argv, ((char **) argv)[0]);
 	ret = addProcess(process);
 	if(!background) {
-		blockProcess(getForeground());
+		changeProcessState(getForeground(), SLEEPING);
     setForeground(process->pid);
 	}
 	yield();
@@ -173,6 +173,11 @@ int sysSignal(uint64_t semaphore, uint64_t rdx, uint64_t rcx, uint64_t r8) {
 int sysWait(uint64_t semaphore, uint64_t rdx, uint64_t rcx, uint64_t r8) {
 	wait((int) semaphore, getpid());
 	return 0;
+}
+
+int sysSleep(uint64_t milliseconds, uint64_t rdx, uint64_t rcx, uint64_t r8) {
+  sleep(milliseconds, getpid());
+  return 0;
 }
 
 int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8) {
@@ -215,4 +220,6 @@ void sysCallsSetup(){
 	sysCalls[24] = &sysReleaseSemaphre;
 	sysCalls[25] = &sysSignal;
 	sysCalls[26] = &sysWait;
+
+  sysCalls[27] = &sysSleep;
 }

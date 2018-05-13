@@ -138,8 +138,6 @@ int producer(int argc, char * argv[]) {
 	char * products = "abcdefg";
 	size_t length = strlen(products);
 	int productIndex = 0;
-	int i = 1000;
-	int j = i;
 
 	if(argc < 2)
 		return -1;
@@ -148,13 +146,7 @@ int producer(int argc, char * argv[]) {
 
 	while(1) {
 
-		while(i--) {
-			while(j) {
-				j--;
-			}
-			j = 10000;
-		}
-		i = 1000;
+		sleep(600);
 
 		if(productIndex == length)
 			productIndex = 0;
@@ -179,8 +171,6 @@ int producer(int argc, char * argv[]) {
 int consumer(int argc, char * argv[]) {
 	char consumed;
 	int consumerNumber;
-	int i = 1000;
-	int j = i;
 
 	if(argc < 2)
 		return -1;
@@ -190,13 +180,7 @@ int consumer(int argc, char * argv[]) {
 
 	while(1) {
 
-		while(i--) {
-			while(j) {
-				j--;
-			}
-			j = 10000;
-		}
-		i = 1000;
+		sleep(600);
 
 		if(index == 0) {
 			printf("Empty buffer\n");
