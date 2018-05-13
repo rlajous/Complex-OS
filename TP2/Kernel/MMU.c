@@ -7,7 +7,6 @@
 
 //static void * const executableMemoryAddress = (void*)0x1000000;
 static void * const moduleAddressesStart = (void*)0x0E00000;
-//static int executable = -1;
 
 module_t modules[] = {{"shell"}, {"sampleDataModule"}, {"sampleCodeModule"}, {"ps"}, {"help"}, {"date"}, {"time"}, {"clear"}, {"echo"}, {"kill"}, {"prodcons"}, {"snek"} ,{"messageTest"} ,{0}};
 /*char* moduleNames[] = {"shell", "sampleDataModule", "sampleCodeModule", "hello", "help", "date", "time", "clear", "echo",0};

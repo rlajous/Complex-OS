@@ -25,7 +25,6 @@ static char buffer[64];
 //  VIDEO
 //==============================================================================
 
-void updateScreen();
 void toggleCursors();
 
 void printChar(char ch, char style) {
@@ -62,8 +61,6 @@ void printChar(char ch, char style) {
 	video[cursorY][cursorX].ch = ch;
 	if(prevX == -1)
 		writeAtCursor(ch, style);
-	//else
-		//updateScreen();
 	incrementCursor();
 }
 
@@ -153,7 +150,6 @@ void newLine() {
 		cursorY++;
 
 	updateCursor(cursorX, cursorY);
-	//updateScreen();
 	toggleCursors();
 }
 
@@ -209,7 +205,6 @@ void backspace() {
 		} while(y < HEIGHT && video[prevY][prevX].ch != 0);
 
 		updateCursor(cursorX, cursorY);
-		//updateScreen();
 		toggleCursors();
 	}
 }
@@ -261,17 +256,12 @@ void cursorRight() {
 	toggleCursors();
 }
 
-/*void updateScreen() {
-	setScreen(videoBuffer);
-}*/
-
 void shiftScreen() {
 	memcpy((uint8_t*) video[0], (uint8_t*) video[1], CELLSIZE*WIDTH*(HEIGHT-1));
 	for(uint8_t x = 0; x < WIDTH; x++) {
 		video[HEIGHT-1][x].ch = 0;
 		video[HEIGHT-1][x].style = defaultStyle;
 	}
-	//updateScreen();
 }
 
 void clearScreen() {
@@ -285,7 +275,6 @@ void clearScreen() {
 	cursorX = 0;
 	cursorY = 0;
 	updateCursor(0, 0);
-	//updateScreen();
 	toggleCursors();
 }
 
@@ -313,13 +302,11 @@ void printBin(uint64_t value) {
 void toggleCursors() {
 	if(cursorVisible) {
 		video[cursorY][cursorX].style = 0x77 ^ video[cursorY][cursorX].style;
-		//writeStyle(cursorX, cursorY, video[cursorY][cursorX].style);
 	}
 }
 
 void blinkCursor() {
 	video[cursorY][cursorX].style = 0x77 ^ video[cursorY][cursorX].style;
-	//writeStyle(cursorX, cursorY, video[cursorY][cursorX].style);
 	if(cursorVisible)
 		cursorVisible = FALSE;
 	else

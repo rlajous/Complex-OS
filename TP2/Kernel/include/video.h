@@ -20,7 +20,5 @@ typedef cell_t video_row[80];
 void writeAtCursor(char ch, char style);
 void writeScreen(uint8_t x, uint8_t y, char ch, char style);
 void updateCursor(uint8_t x, uint8_t y);
-void writeStyle(uint8_t x, uint8_t y, char style);
-void setScreen(video_row* buffer);
 
 #endif

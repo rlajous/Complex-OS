@@ -202,15 +202,3 @@ int log2(uint64_t x) {
     result++;
   return result;
 }
-
-//DEBUG
-
-/*void printHeap(buddyHeap_t * heap) {
-  int i;
-  int level = 0;
-  for(i = 0; i < 15; i++) {
-    if((i+1) == 1 << level)
-      level++;
-    printf("L:%d\t%p\t%c\n", level, heap.memoryBase[i], heap.blockUsage[i] == 0? 'F':heap.blockUsage[i] == 1? 'H':heap.blockUsage[i] == 2 ? 'U' : 'A');
-  }
-}*/

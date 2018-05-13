@@ -42,7 +42,4 @@ int isAllocatedPageRecursive(void * memoryBase, int index);
 int pagesToAllocate(uint64_t bytes);
 int log2(uint64_t x);
 
-//debug
-//void printHeap(buddyHeap_t * heap);
-
 #endif

@@ -43,8 +43,6 @@ void cursorLeft();
 
 void cursorRight();
 
-void invertStyle(uint8_t x, uint8_t y);
-
 void shiftScreen();
 
 void clearScreen();
