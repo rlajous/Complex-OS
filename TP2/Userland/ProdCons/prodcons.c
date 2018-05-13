@@ -1,20 +1,42 @@
 #include <stdlib.h>
+#include <process.h>
+#include <ipc.h>
 #include <stdio.h>
+#include <string.h>
 #include "prodcons.h"
 
 #define MAX_PRODUCERS 5
 #define MAX_CONSUMERS 5
+#define MAX_BUFFER 5
 
-int producerPid[MAX_PRODUCERS];
-int consumerPid[MAX_CONSUMERS];
+static int producerPid[MAX_PRODUCERS];
+static int consumerPid[MAX_CONSUMERS];
 
-int consumerIndex = 0;
-int producerIndex = 0;
+static char buffer[MAX_BUFFER];
+
+static int bufferMutex;
+static int emptySem;
+static int producedSem;
+
+static int consumerIndex = 0;
+static int producerIndex = 0;
+static int index = 0;
 
 
 int main(int argc, char *argv[]) {
 	char c, aux;
 	int control = 1;
+	int i;
+
+	bufferMutex = createMutex("ProdCons Mutex");
+
+	emptySem = createSemaphore("Empty Sem");
+
+	producedSem = createSemaphore("Produced Sem");
+
+	for(i = 0; i < MAX_BUFFER; i++) {
+		signal(emptySem);
+	}
 
 	printf("Type:\n\tq to quit\n\tp to add producer\n\tk to kill producer\n\tc to add consumer\n\tx to kill consumer\n\ts for status\n\th for help\n");
 
@@ -26,14 +48,20 @@ int main(int argc, char *argv[]) {
     control = processControl(c);
   }
 
+  releaseMutex(bufferMutex);
+
+  releaseSemaphore(emptySem);
+
+	releaseSemaphore(producedSem);
+
   return 0;
 }
 
 int processControl(char option) {
 
-	char buffer[11];
+	char name[10];
 	char num[11];
-	char * arguments[] = {buffer, num};
+	char * arguments[] = {name, num};
 	int ret = 1;
 
 	switch(option) {
@@ -44,35 +72,38 @@ int processControl(char option) {
 
 		case 'p':
 			producerIndex++;
-			itoa(getpid(), buffer, 10);
+			strncpy(name, "producer", 9);
+			itoa(producerIndex, num, 10);
 			printf("Added Producer\n");
-			addBackgroundProcess("producer", 1, arguments);
+			producerPid[producerIndex - 1] = runProcess(&producer, 2, arguments);
 			break;
 
 		case 'k':
-			producerIndex--;
-			deleteChannel(producerPid[producerIndex]);
-			printf("Killed Producer\n");
-			kill(producerPid[producerIndex]);
+		  if(producerIndex > 0) {
+        printf("Killed Producer %d\n", producerIndex);
+        producerIndex--;
+        kill(producerPid[producerIndex]);
+      }
 			break;
 
 		case 'c':
 			consumerIndex++;
-			itoa(getpid(), buffer, 10);
+			strncpy(name, "consumer", 9);
 			itoa(consumerIndex, num, 10);
 			printf("Added Consumer\n");
-			addBackgroundProcess("consumer", 2, arguments);
+      consumerPid[consumerIndex - 1] = runProcess(&consumer, 2, arguments);
 			break;
 
 		case 'x':
-			consumerIndex--;
-			deleteChannel(consumerPid[consumerIndex]);
-			printf("Killed Consumer %d\n", consumerPid[consumerIndex]);
-			kill(consumerPid[consumerIndex]);
+		  if(consumerIndex > 0) {
+        printf("Killed Consumer %d\n", consumerIndex);
+        consumerIndex--;
+        kill(consumerPid[consumerIndex]);
+      }
 			break;
 
 		case 's':
-			printf("%d Producers, %d Consumers\n", producerIndex, consumerIndex);
+			printf("%d Producers, %d Consumers, %d/%d Used\n", producerIndex, consumerIndex, index, MAX_BUFFER);
 			break;
 
 		case 'h':
@@ -88,17 +119,98 @@ int processControl(char option) {
 }
 
 void killAllProcesses() {
-	int i = consumerIndex - 1;
+	int i = consumerIndex;
 
 	while(i-- >= 0) {
-		deleteChannel(consumerPid[i]);
-		//kill(consumerPid[i]);
+		kill(consumerPid[i]);
 	}
 
-	i = producerIndex - 1;
+	i = producerIndex;
 
 	while(i-- >= 0) {
-		deleteChannel(producerPid[i]);
 		kill(producerPid[i]);
+	}
+}
+
+int producer(int argc, char * argv[]) {
+	char product;
+	int producerNumber;
+	char * products = "abcdefg";
+	size_t length = strlen(products);
+	int productIndex = 0;
+	int i = 1000;
+	int j = i;
+
+	if(argc < 2)
+		return -1;
+
+	parseInt(argv[1],&producerNumber);
+
+	while(1) {
+
+		while(i--) {
+			while(j) {
+				j--;
+			}
+			j = 10000;
+		}
+		i = 1000;
+
+		if(productIndex == length)
+			productIndex = 0;
+
+		product = products[productIndex++];
+
+		if(index == MAX_BUFFER) {
+			printf("Full buffer\n");
+		}
+		wait(emptySem);
+		mutexDown(bufferMutex);
+
+		buffer[index++] = product;
+
+		mutexUp(bufferMutex);
+		signal(producedSem);
+
+		printf("Producer %d: %c in %d\n", producerNumber, product, index - 1);
+	}
+}
+
+int consumer(int argc, char * argv[]) {
+	char consumed;
+	int consumerNumber;
+	int i = 1000;
+	int j = i;
+
+	if(argc < 2)
+		return -1;
+
+	parseInt(argv[1],&consumerNumber);
+
+
+	while(1) {
+
+		while(i--) {
+			while(j) {
+				j--;
+			}
+			j = 10000;
+		}
+		i = 1000;
+
+		if(index == 0) {
+			printf("Empty buffer\n");
+		}
+
+		wait(producedSem);
+		mutexDown(bufferMutex);
+
+		index--;
+		consumed = buffer[index];
+
+		mutexUp(bufferMutex);
+		signal(emptySem);
+
+		printf("Consumer %d: %c in %d\n", consumerNumber, consumed, index);
 	}
 }
