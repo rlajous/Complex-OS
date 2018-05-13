@@ -1,7 +1,9 @@
 #include <buddyMemoryAllocator.h>
+#include <mutex.h>
 
 static buddyHeap_t buddyHeap;
 static int maxLevels = 0;
+static int buddyMutex;
 
 //http://www.memorymanagement.org/mmref/alloc.html
 buddyHeap_t initializeHeap() {
@@ -15,6 +17,9 @@ buddyHeap_t initializeHeap() {
     buddyHeap.blockUsage[i] = UNUSED;
 	}
   maxLevels = log2(PAGE_QUANTITY);
+
+	buddyMutex = createMutex(0, "_BUDDY_MUTEX_");
+
 	return buddyHeap;
 }
 
@@ -22,7 +27,16 @@ void * allocatePages(int pages) {
   if(pages == 0 || pages > PAGE_QUANTITY)
     return NULL;
 
-  return getPages(pages);
+  void * address;
+  int pid = getpid();
+
+  mutexDown(buddyMutex, pid);
+
+  address = getPages(pages);
+
+  mutexUp(buddyMutex, pid);
+
+  return address;
 }
 
 void * allocateMemory(uint64_t bytes) {
@@ -115,12 +129,14 @@ void setMemoryBlockDivisionBases(int parentIndex) {
 }
 
 int freeMemory(void * memoryBase) {
-
+  int pid = getpid();
 	if(isAllocatedPage(memoryBase)) {
+    mutexDown(buddyMutex, pid);
 		int index = ((unsigned long)memoryBase - (unsigned long)base)/PAGE_SIZE;
     index = index + (HEAPSIZE/2);
 		buddyHeap.blockUsage[index] = UNUSED;
 		freeMemoryRecursive(PARENT(index + 1));
+    mutexUp(buddyMutex, pid);
 		return 1;
 	}
 

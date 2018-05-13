@@ -29,6 +29,8 @@ typedef struct channelNode{
     struct channelNode* nextChannel;
 } channelNode_t;
 
+void initializeChannels();
+
 channelNode_t* getChannelFromList(int recipientPid, int senderPid);
 
 int channelBelongsToPids(channelNode_t * channel, int pid1, int pid2);

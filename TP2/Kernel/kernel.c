@@ -11,14 +11,17 @@
 #include <mutex.h>
 #include <semaphore.h>
 #include <timer.h>
+#include <channel.h>
 
 int main(void) {
 	clearScreen();
-	initializeHeap();
 	initializeScheduler();
-	initializeTimer();
 	setupMutexSystem();
+	initializeHeap();
+	initializeTimer();
 	setupSemaphoreSystem();
+	initializeChannels();
+
 	setupIDT();
 
 	startSystem();

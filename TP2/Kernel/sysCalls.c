@@ -135,7 +135,7 @@ int sysDeleteChannel(uint64_t recipientPid, uint64_t rdx, uint64_t rcx, uint64_t
   channelNode_t * channel;
   channel = getChannelFromList((int)recipientPid, getpid());
   if(channel != NULL)
-    deleteChannel(channel);
+    removeChannelFromList(channel);
 	return 0;
 }
 

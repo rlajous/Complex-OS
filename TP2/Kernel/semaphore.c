@@ -3,6 +3,7 @@
 static semaphore_t semaphores[MAX_SEMAPHORES];
 static int firstAvailableSemaphore = 0;
 static int usedSemaphores = 0;
+static int semaphoreMutex;
 
 void setupSemaphoreSystem() {
   int i;
@@ -10,12 +11,14 @@ void setupSemaphoreSystem() {
   for(i = 0 ; i < MAX_SEMAPHORES ; i++) {
     clearSemaphore(i);
   }
+  semaphoreMutex = createMutex(0, "_SEM_MUTEX_");
 }
 
 int getSemaphore(char * name, int pid) {
   int i;
   int semaphore;
 
+  mutexDown(semaphoreMutex, pid);
   for(i = 0; i < MAX_SEMAPHORES; i++) {
     if(!strcmp(semaphores[i].name, name) && semaphores[i].pid != NOT_USED) {
       return i;
@@ -24,6 +27,7 @@ int getSemaphore(char * name, int pid) {
 
   semaphore = createSemaphore(pid, name);
 
+  mutexUp(semaphoreMutex, pid);
   return semaphore;
 }
 
@@ -53,6 +57,8 @@ int createSemaphore(int pid, char * name) {
 int releaseSemaphore(int pid, int semaphore) {
   int released = 0;
 
+  mutexDown(semaphoreMutex, pid);
+
   if(isValidSemaphore(semaphore)) {
     if (pid == semaphores[semaphore].pid) {
       releaseMutex(pid, semaphores[semaphore].pid);
@@ -62,6 +68,8 @@ int releaseSemaphore(int pid, int semaphore) {
       released = 1;
     }
   }
+
+  mutexUp(semaphoreMutex, pid);
   return released;
 }
 
@@ -179,7 +187,7 @@ int unlockSemaphoreProcess(int semaphore) {
 void removePidFromSemaphores(int pid) {
   int i, j;
 
-  lock();
+  mutexDown(semaphoreMutex, pid);
 
   for(i = 0 ; i < MAX_SEMAPHORES ; i++){
     if(semaphores[i].pid == pid) {
@@ -195,5 +203,6 @@ void removePidFromSemaphores(int pid) {
       }
     }
   }
-  unlock();
+
+  mutexUp(semaphoreMutex, pid);
 }

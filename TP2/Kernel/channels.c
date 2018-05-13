@@ -1,6 +1,11 @@
 #include <channel.h>
 
 static channelNode_t* firstChannel = NULL;
+static int channelMutex;
+
+void initializeChannels() {
+	channelMutex = createMutex(0, "_CHANNEL_MUTEX_");
+}
 
 channelNode_t* getChannelFromList(int recipientPid, int senderPid) {
 	channelNode_t * node = firstChannel;
@@ -37,6 +42,9 @@ void addChannelToList(channelNode_t* newChannel) {
 }
 
  void removeChannelFromList(channelNode_t* channel) {
+	int pid = getpid();
+	mutexDown(channelMutex, pid);
+
 	channelNode_t * current;
 	channelNode_t * previous;
 
@@ -56,6 +64,8 @@ void addChannelToList(channelNode_t* newChannel) {
 
 		deleteChannel(current);
 	}
+
+	mutexUp(channelMutex, pid);
  }
 
 messageNode_t* addMessageToList(messageNode_t* newMessage, messageNode_t* listHead) {
@@ -105,6 +115,9 @@ messageNode_t* getNextMessageForPid(channelNode_t* channel, int pid){
 
 channelNode_t * createChannel(int senderPid, int recipientPid){
 	int i;
+
+	mutexDown(channelMutex, senderPid);
+
   channelNode_t* newChannel = getChannelFromList(senderPid, recipientPid);
   if(newChannel != NULL)
     return newChannel;
@@ -138,6 +151,8 @@ channelNode_t * createChannel(int senderPid, int recipientPid){
 
     addChannelToList(newChannel);
   }
+
+	mutexUp(channelMutex, senderPid);
 	return newChannel;
 }
 

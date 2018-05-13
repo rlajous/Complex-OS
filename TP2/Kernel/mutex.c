@@ -2,8 +2,9 @@
 #include <lib.h>
 
 static mutex_t mutexes[MAX_MUTEXES];
-static int firstAvailableMutex = 0;
-static int usedMutexes = 0;
+static int firstAvailableMutex = 1;
+static int usedMutexes = 1;
+static int adminMutex = 0;
 
 void setupMutexSystem() {
   int i;
@@ -11,12 +12,14 @@ void setupMutexSystem() {
   for(i = 0 ; i < MAX_MUTEXES ; i++){
     clearMutex(i);
   }
+  mutexes[adminMutex].pid = 0;
 }
 
 int getMutex(char * name, int pid) {
   int i;
   int mutex;
 
+  mutexDown(adminMutex,pid);
   for(i = 0; i < MAX_MUTEXES; i++) {
     if(!strcmp(mutexes[i].name, name) && mutexes[i].pid != NOT_USED) {
       return i;
@@ -25,6 +28,7 @@ int getMutex(char * name, int pid) {
 
   mutex = createMutex(pid, name);
 
+  mutexUp(adminMutex, pid);
   return mutex;
 }
 
@@ -47,6 +51,7 @@ int createMutex(int pid, char * name) {
 int releaseMutex(int pid, int mutex) {
   int released = 0;
 
+  mutexDown(adminMutex, pid);
   if(isValidMutex(mutex)) {
     if (pid == mutexes[mutex].pid) {
       mutexes[mutex].pid = NOT_USED;
@@ -56,6 +61,7 @@ int releaseMutex(int pid, int mutex) {
       released = 1;
     }
   }
+  mutexUp(adminMutex, pid);
   return released;
 }
 
@@ -190,6 +196,8 @@ int unlockProcess(int mutex) {
 void removePidFromMutexes(int pid) {
   int i, j;
 
+  mutexDown(adminMutex, pid);
+
   for(i = 0 ; i < MAX_MUTEXES ; i++){
     if(mutexes[i].pid == pid) {
       releaseMutex(pid, i);
@@ -207,4 +215,6 @@ void removePidFromMutexes(int pid) {
       }
     }
   }
+
+  mutexUp(adminMutex, pid);
 }
