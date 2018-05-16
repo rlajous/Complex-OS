@@ -31,10 +31,10 @@ typedef struct Snack{
 } snack_t;
 
 
-void handleInput(char* inputKey, player_t* player);
-void update(player_t* player, tail_t* tail, snack_t* snack, int* playerAlive);
+void handleInput(char* inputKey, player_t* player, player_t* player2);
+void update(player_t* player, player_t* player2, tail_t* tail, tail_t* tail2, snack_t* snack, int* playerAlive, int* playerAlive2);
 void updatePlayer(player_t* player, int* playerAlive);
 void updateTail(player_t* player, tail_t* tail);
 void checkCollisionWithSnack(player_t* player, tail_t* tail, snack_t* snack);
 void checkCollisionWithTail(player_t* player, tail_t* tail, int* playerAlive);
-void draw(player_t* player, tail_t* tail, snack_t* snack);
+void draw(player_t* player, tail_t* tail, player_t* player2, tail_t* tail2, snack_t* snack);

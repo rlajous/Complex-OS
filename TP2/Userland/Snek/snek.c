@@ -3,11 +3,16 @@
 
 int main(int argc, char *argv[]) {
 	player_t player;
+	player_t player2;
+
 	tail_t tail;
+	tail_t tail2;
 	snack_t snack;
 
 	int playerAlive = 1;
 	char inputKey = '0';
+
+	int playerAlive2 = 1;
 
 	player.sprite = 'X';
 	player.position.x = 12;
@@ -20,25 +25,37 @@ int main(int argc, char *argv[]) {
 	tail.youngestElemIndex = 0;
 	tail.oldestElemIndex = 0;
 
+	player2.sprite = '#';
+	player2.position.x = 20;
+	player2.position.y = 5;
+	player2.speed.x = 1;
+	player2.speed.y = 0;
+
+	tail2.sprite = '.';
+	tail2.length = 0;
+	tail2.youngestElemIndex = 0;
+	tail2.oldestElemIndex = 0;
+
 	snack.sprite = 'o';
 	snack.position.x = 10;
 	snack.position.y = 10;
 
 	echo(0);
-	while (playerAlive){
+	while (playerAlive && playerAlive2){
 	  sleep(55);
-	  handleInput(&inputKey, &player);
-	  update(&player, &tail, &snack, &playerAlive);
-	  draw(&player, &tail, &snack);
+	  handleInput(&inputKey, &player, &player2);
+	  update(&player, &player2, &tail, &tail2, &snack, &playerAlive, &playerAlive2);
+	  draw(&player, &tail, &player2, &tail2, &snack);
 	}
-
-	echo(1);
 	clear();
+	printf(playerAlive?"Player 1 wins!\n":"Player 2 Wins!\n");
+	echo(1);
+
 
 	return 0;
 }
 
-void handleInput(char* inputKey, player_t* player){
+void handleInput(char* inputKey, player_t* player, player_t* player2){
 	*inputKey = getch();
 	switch(*inputKey){
 		case 'w':
@@ -57,22 +74,48 @@ void handleInput(char* inputKey, player_t* player){
 			(*player).speed.x = -1;
 			(*player).speed.y = 0;
 			break;
+		case 'i':
+			(*player2).speed.x = 0;
+			(*player2).speed.y = -1;
+			break;
+		case 'k':
+			(*player2).speed.x = 0;
+			(*player2).speed.y = 1;
+			break;
+		case 'l':
+			(*player2).speed.x = 1;
+			(*player2).speed.y = 0;
+			break;
+		case 'j':
+			(*player2).speed.x = -1;
+			(*player2).speed.y = 0;
+			break;
 	}	
 }
 
-void update(player_t* player, tail_t* tail, snack_t* snack, int* playerAlive){
-	updatePlayer(player, playerAlive);
-	checkCollisionWithSnack(player, tail, snack);
-	checkCollisionWithTail(player, tail, playerAlive);
+void update(player_t* player, player_t* player2, tail_t* tail, tail_t* tail2, snack_t* snack, int* playerAlive, int* playerAlive2){
 	updateTail(player, tail);
+	updateTail(player2, tail2);
+	updatePlayer(player, playerAlive);
+	updatePlayer(player2, playerAlive2);
+	checkCollisionWithSnack(player, tail, snack);
+	checkCollisionWithSnack(player2, tail2, snack);
+	checkCollisionWithTail(player, tail, playerAlive);
+	checkCollisionWithTail(player, tail2, playerAlive);
+	checkCollisionWithTail(player2, tail2, playerAlive2);
+	checkCollisionWithTail(player2, tail, playerAlive2);
 }
 
-void draw(player_t* player, tail_t* tail, snack_t* snack){
+void draw(player_t* player, tail_t* tail, player_t* player2, tail_t* tail2, snack_t* snack){
 	clear();
 	for (int i = (*tail).oldestElemIndex; i < (*tail).youngestElemIndex; i++){
 		writeCharAtScreenPos((*tail).sprite, (*tail).tailPositions[i].x, (*tail).tailPositions[i].y);
 	}
+	for (int i = (*tail2).oldestElemIndex; i < (*tail2).youngestElemIndex; i++){
+		writeCharAtScreenPos((*tail2).sprite, (*tail2).tailPositions[i].x, (*tail2).tailPositions[i].y);
+	}
 	writeCharAtScreenPos((*player).sprite, (*player).position.x, (*player).position.y);
+	writeCharAtScreenPos((*player2).sprite, (*player2).position.x, (*player2).position.y);
 	writeCharAtScreenPos((*snack).sprite, (*snack).position.x, (*snack).position.y);
 }
 
