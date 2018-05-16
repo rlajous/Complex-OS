@@ -141,7 +141,7 @@ void updateTail(player_t* player, tail_t* tail){
 void checkCollisionWithSnack(player_t* player, tail_t* tail, snack_t* snack){
 	if ((*player).position.x == (*snack).position.x && (*player).position.y == (*snack).position.y){
 		(*tail).length++;
-		(*tail).youngestElemIndex++;
+		(*tail).youngestElemIndex += 2;
 		(*snack).position.x = getSeconds() % GAME_WIDTH;
 		(*snack).position.y = getSeconds() % GAME_HEIGHT;
 	}

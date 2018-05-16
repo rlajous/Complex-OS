@@ -4,7 +4,7 @@
 
 #define GAME_WIDTH 80
 #define GAME_HEIGHT 25
-#define TAIL_LENGTH_LIMIT 80
+#define TAIL_LENGTH_LIMIT 160
 
 typedef struct Vector2{
 	int x;
