@@ -12,8 +12,8 @@ typedef struct {
     int bytes;
     int buffer[PIPE_BUFFER_LENGTH];
     int pid;
-    int semaphore1;
-    int semaphore2;
+    int semWrite;
+    int semRead;
     int used;
 } Pipe;
 

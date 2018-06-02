@@ -26,5 +26,23 @@ int createPipe(char * pipeName){
     return -1;
 }
 
+void initializePipes(){
+    int i, j;
+
+    for(i = 0; i < MAX_PIPES; i++){
+        Pipe * p = &pipes[i];
+
+        p->readIndex = 0;
+        p->writeIndex = 0;
+        p->bytes = 0;
+        for(j = 0; j < PIPE_BUFFER_LENGTH; j++){
+            p->buffer[j] = 0;
+        }
+        p->pid = 0;
+        char semWriteName[12] ="SEM_WRITE_";
+
+
+    }
+}
 
 
