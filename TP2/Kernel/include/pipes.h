@@ -1,8 +1,9 @@
 #ifndef PIPES_H
 #define PIPES_H
 
-#define PIPE_BUFFER_LENGTH 20
+#define PIPE_PAGES 1
 #define PROCESS_NAME_LENGTH 20
+#define PIPE_BUFFER_LENGTH = PIPE_PAGES * PAGE_SIZE
 #define MAX_PIPES 10
 
 typedef struct {
@@ -10,11 +11,11 @@ typedef struct {
     char name[PROCESS_NAME_LENGTH];
     int readIndex;
     int writeIndex;
-    int bytes;
-    int buffer[PIPE_BUFFER_LENGTH];
+    char * buffer;
     int semWrite;
     int semRead;
     int used;
+    int mutex;
 } pipe_t;
 
 
