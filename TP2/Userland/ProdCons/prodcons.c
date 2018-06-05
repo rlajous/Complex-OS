@@ -2,7 +2,7 @@
 #include <process.h>
 #include <ipc.h>
 #include <stdio.h>
-#include <string.h>
+#include <strings.h>
 #include "prodcons.h"
 
 #define MAX_PRODUCERS 5

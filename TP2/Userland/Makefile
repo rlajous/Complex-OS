@@ -21,4 +21,4 @@ clean:
 	rm -rf *.bin
 
 
-.PHONY: sampleCodeModule all clean
+.PHONY: libc sampleCodeModule all clean

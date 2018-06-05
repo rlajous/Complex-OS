@@ -68,7 +68,7 @@ uint8_t days(int month) {
 }
 
 void setTimeZone(int tz) {
-  if(tz >= -12 || tz <=14)
+  if(tz >= -12 && tz <=14)
     timeZone = tz;
 }
 
