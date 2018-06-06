@@ -11,19 +11,20 @@
 
 typedef struct {
   int pid;
+  int thread;
   uint64_t tickQuantity;
   int next;
-} sleepingProcess_t;
+} sleepingThread_t;
 
 void initializeTimer();
 
-void sleep(uint64_t milliseconds, int pid);
+void sleep(uint64_t milliseconds, int pid, int thread);
 
 void decrementTicks();
 
-int removeSleepingProcess(int pid);
+int removeSleepingProcess(int pid, int thread);
 
-int addSleepingProcess(int pid, uint64_t tickQuantity);
+int addSleepingProcess(int pid, int thread, uint64_t tickQuantity);
 
 int getNextAvailableSpace();
 

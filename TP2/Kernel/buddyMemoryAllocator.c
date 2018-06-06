@@ -18,7 +18,7 @@ buddyHeap_t initializeHeap() {
 	}
   maxLevels = log2(PAGE_QUANTITY);
 
-	buddyMutex = createMutex(0, "_BUDDY_MUTEX_");
+	buddyMutex = createMutex(0, "_BUDDY_MUTEX_", 0);
 
 	return buddyHeap;
 }
@@ -29,12 +29,13 @@ void * allocatePages(int pages) {
 
   void * address;
   int pid = getpid();
+  int thread = getCurrentThread();
 
-  mutexDown(buddyMutex, pid);
+  mutexDown(buddyMutex, pid, thread);
 
   address = getPages(pages);
 
-  mutexUp(buddyMutex, pid);
+  mutexUp(buddyMutex, pid, thread);
 
   return address;
 }
@@ -130,13 +131,15 @@ void setMemoryBlockDivisionBases(int parentIndex) {
 
 int freeMemory(void * memoryBase) {
   int pid = getpid();
+  int thread = getCurrentThread();
+
 	if(isAllocatedPage(memoryBase)) {
-    mutexDown(buddyMutex, pid);
+    mutexDown(buddyMutex, pid, thread);
 		int index = ((unsigned long)memoryBase - (unsigned long)base)/PAGE_SIZE;
     index = index + (HEAPSIZE/2);
 		buddyHeap.blockUsage[index] = UNUSED;
 		freeMemoryRecursive(PARENT(index + 1));
-    mutexUp(buddyMutex, pid);
+    mutexUp(buddyMutex, pid, thread);
 		return 1;
 	}
 

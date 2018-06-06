@@ -2,6 +2,7 @@
 #include <process.h>
 #include <terminal.h>
 #include <semaphore.h>
+#include <types.h>
 
 static roundRobinNode_t processes[MAX_PROCESSES];
 static int firstAvailableSpace = 0;
@@ -25,23 +26,29 @@ void initializeScheduler() {
 void * nextProcess() {
   int next = current;
   int first = next;
+  int currentThread;
 
   if(changeLock == 1) {
     lockQuantumExceded = 1;
     return getCurrentStack();
   }
 
-  if(processes[current].process != NULL && processes[current].process->state == RUNNING) {
-    processes[current].process->state = READY;
+  if(processes[current].process != NULL) {
+    currentThread = processes[current].process->currentThread;
+    thread_t * thread = processes[current].process->threads[currentThread].thread;
+    if(thread->state == RUNNING) {
+      thread->state = READY;
+    }
   }
 
   do {
     next = processes[next].next;
-  } while(processes[next].process->state != READY && first != next);
+  } while(nextThread(processes[next].process) == -1 && first != next);
 
   current = next;
   quantum = QUANTUM;
-  processes[current].process->state = RUNNING;
+  currentThread = processes[current].process->currentThread;
+  processes[current].process->threads[currentThread].thread->state = RUNNING;
   return getCurrentStack();
 }
 
@@ -56,8 +63,13 @@ int getpid() {
   return processQuantity == 0? -1 : processes[current].process->pid;
 }
 
+int getCurrentThread() {
+  return processQuantity == 0? -1 : processes[current].process->currentThread;
+}
+
 void * getCurrentStack() {
-  return processes[current].process->stack;
+  int currentThread = processes[current].process->currentThread;
+  return processes[current].process->threads[currentThread].thread->stack;
 }
 
 int addProcess(process_t* process) {
@@ -125,12 +137,14 @@ int findFirstAvailableSpace(){
 }
 
 void * switchToKernelStack(void * rsp) {
-  processes[current].process->stack = rsp;
+  int currentThread = processes[current].process->currentThread;
+  processes[current].process->threads[currentThread].thread->stack = rsp;
   return (schedulerAuxiliaryStack + PAGE_SIZE - 1);
 }
 
 void * getEntryPoint() {
-  return processes[current].process->entryPoint;
+  int currentThread = processes[current].process->currentThread;
+  return processes[current].process->threads[currentThread].thread->entryPoint;
 }
 
 void killForeground() {
@@ -144,6 +158,16 @@ void killCurrent() {
   yield();
 }
 
+void killThread(int pid, int thread) {
+  process_t * process = getProcess(pid);
+
+  if(process != NULL) {
+    removeThreadFromMutexes(pid, thread);
+    removeThreadFromSemaphores(pid,thread);
+    terminateThread(process, thread);
+  }
+}
+
 void killProcess(int pid) {
   int index = getProcessIndex(pid);
 
@@ -152,11 +176,11 @@ void killProcess(int pid) {
     if(foreground->pid == pid) {
       resetBuffer();
       setForeground(foreground->ppid);
-      changeProcessState(foreground->pid, READY);
+      changeThreadState(foreground->pid, foreground->currentThread, READY);
     }
+    removePidFromMutexes(pid, processes[index].process->currentThread);
+    removePidFromSemaphores(pid,processes[index].process->currentThread);
     removeProcess(processes[index].process);
-    removePidFromMutexes(pid);
-    removePidFromSemaphores(pid);
   }
 }
 
@@ -186,106 +210,125 @@ int getProcessIndex(int pid) {
   return PID_NOT_FOUND;
 }
 
-void changeProcessState(int pid, processState state) {
+process_t * getProcess(int pid) {
   int index = getProcessIndex(pid);
+  process_t * process = NULL;
 
-  if(index != PID_NOT_FOUND) {
-    processes[index].process->state = state;
-  }
+  if(index != PID_NOT_FOUND)
+    process = processes[index].process;
+
+  return process;
 }
 
 void getProcesses(char * buffer, int size) {
-  int i,j = 0;
+  int i,j, thread = 0;
   int length;
   int k = current;
 
   for(i = 0; i < processQuantity; i++) {
-      if(size > 0) {
-        memcpy(buffer + j, "pid: ", 5);
-        j += 5;
-        size -= 5;
-      }
-
-      if(size > 0) {
-        length = uintToBase(processes[k].process->pid, buffer + j, 10);
-        j += length;
-        size -= length;
-      }
-
-      if(size > 0) {
-        memcpy(buffer + j, ", Name: ", 8);
-        j += 8;
-        size -= 8;
-      }
-
-      if(size > 0) {
-        length = strlen(processes[k].process->name);
-        memcpy(buffer + j, processes[k].process->name, length);
-        j += length;
-        size -= length;
-      }
-
-      if(size > 0) {
-        memcpy(buffer + j, ", Status: ", 10);
-        j += 10;
-        size -= 10;
-      }
-
-      if(size > 0) {
-        char * state;
-        int length;
-
-        switch(processes[k].process->state) {
-          case RUNNING:
-            state = "Running";
-            break;
-
-          case READY:
-            state = "Ready";
-            break;
-
-          case BLOCKED:
-            state = "Blocked";
-            break;
-
-          case SLEEPING:
-            state = "Sleeping";
-            break;
+    for(thread = 0; thread < MAX_THREADS; thread++) {
+      if (processes[k].process->threads[thread].thread != NULL) {
+        if(size > 0) {
+          memcpy(buffer + j, "pid: ", 5);
+          j += 5;
+          size -= 5;
         }
 
-        length = strlen(state);
-        memcpy(buffer + j, state, length);
-        j += length;
-        size -= length;
+        if(size > 0) {
+          length = uintToBase(processes[k].process->pid, buffer + j, 10);
+          j += length;
+          size -= length;
+        }
+
+        if(size > 0) {
+          memcpy(buffer + j, ", Name: ", 8);
+          j += 8;
+          size -= 8;
+        }
+
+        if(size > 0) {
+          length = strlen(processes[k].process->name);
+          memcpy(buffer + j, processes[k].process->name, length);
+          j += length;
+          size -= length;
+        }
+
+        if(size > 0) {
+          memcpy(buffer + j, ", Status: ", 10);
+          j += 10;
+          size -= 10;
+        }
+
+        if (size > 0) {
+          char *state;
+          int length;
+
+          switch (processes[k].process->threads[thread].thread->state) {
+            case RUNNING:
+              state = "Running";
+              break;
+
+            case READY:
+              state = "Ready";
+              break;
+
+            case BLOCKED:
+              state = "Blocked";
+              break;
+
+            case SLEEPING:
+              state = "Sleeping";
+              break;
+          }
+
+          length = strlen(state);
+          memcpy(buffer + j, state, length);
+          j += length;
+          size -= length;
+        }
+
+        if (size > 0) {
+          memcpy(buffer + j, ", Stack: 0x", 11);
+          j += 11;
+          size -= 11;
+        }
+
+        if (size > 0) {
+          length = uintToBase((uint64_t) processes[k].process->threads[thread].thread->memoryBase, buffer + j, 16);
+          j += length;
+          size -= length;
+        }
+
+        if (size > 0) {
+          memcpy(buffer + j, ", ThreadId: ", 12);
+          j += 12;
+          size -= 12;
+        }
+
+        if (size > 0) {
+          length = uintToBase((uint64_t) thread, buffer + j, 10);
+          j += length;
+          size -= length;
+        }
+
+        if (size > 0) {
+          char *status;
+
+          if (processes[k].process == foreground)
+            status = ", Fg\n";
+          else
+            status = ", Bg\n";
+
+          length = strlen(status);
+          memcpy(buffer + j, status, length);
+          j += length;
+          size -= length;
+        }
       }
-
-    if(size > 0) {
-      memcpy(buffer + j, ", Stack: 0x", 11);
-      j += 11;
-      size -= 11;
     }
-
-    if(size > 0) {
-      length = uintToBase((uint64_t) processes[k].process->memoryBase, buffer + j, 16);
-      j += length;
-      size -= length;
-    }
-
-    if(size > 0) {
-      char * status;
-
-      if(processes[k].process == foreground)
-        status = ", Fg\n";
-      else
-        status = ", Bg\n";
-
-      length = strlen(status);
-      memcpy(buffer + j, status, length);
-      j += length;
-      size -= length;
-    }
-      k = processes[k].next;
+    k = processes[k].next;
   }
+
   if(j < size)
     buffer[j] = '\0';
   else
@@ -293,7 +336,6 @@ void getProcesses(char * buffer, int size) {
 }
 
 void setForeground(int pid) {
-  //previousForeground = foreground;
   foreground = processes[getProcessIndex(pid)].process;
 }
 
@@ -317,14 +359,16 @@ void unlock() {
 }
 
 void blockRead() {
-  if(foreground->state != BLOCKED) {
-    foreground->state = BLOCKED;
+  int currentThread = foreground->currentThread;
+  if(foreground->threads[currentThread].thread->state != BLOCKED) {
+    foreground->threads[currentThread].thread->state = BLOCKED;
     yield();
   }
 }
 
 void unblockRead() {
-  if(foreground->state == BLOCKED) {
-    foreground->state = READY;
+  int currentThread = foreground->currentThread;
+  if(foreground->threads[currentThread].thread->state == BLOCKED) {
+    foreground->threads[currentThread].thread->state = READY;
   }
 }

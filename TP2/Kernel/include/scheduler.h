@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <process.h>
 #include <buddyMemoryAllocator.h>
+#include <threads.h>
 
 #define MAX_PROCESSES 100
 #define PROCESS_LIMIT_REACHED -1
@@ -23,6 +24,8 @@ void * schedule();
 
 int getpid();
 
+int getCurrentThread();
+
 void * getCurrentStack();
 
 int addProcess(process_t* process);
@@ -39,13 +42,15 @@ void killForeground();
 
 void killCurrent();
 
+void killThread(int pid, int thread);
+
 void killProcess(int pid);
 
 void changeChildrenToOrphan(int pid);
 
 int getProcessIndex(int pid);
 
-void changeProcessState(int pid, processState state);
+process_t * getProcess(int pid);
 
 void getProcesses(char * buffer, int size);
 

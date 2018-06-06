@@ -1,6 +1,6 @@
 #include <timer.h>
 
-static sleepingProcess_t sleepingProcesses[MAX_SLEEPING_PROCESSES];
+static sleepingThread_t sleepingProcesses[MAX_SLEEPING_PROCESSES];
 static int firstAvailableSpace = 0;
 static int sleeping = 0;
 static int first = NOT_USED;
@@ -12,11 +12,11 @@ void initializeTimer() {
   }
 }
 
-void sleep(uint64_t milliseconds, int pid) {
+void sleep(uint64_t milliseconds, int pid, int thread) {
   uint64_t ticks = milliseconds/55; //ticks every 55ms
   if(ticks > 0) {
-    addSleepingProcess(pid, ticks);
-    changeProcessState(pid, SLEEPING);
+    addSleepingProcess(pid, thread, ticks);
+    changeThreadState(pid, thread, SLEEPING);
     yield();
   }
 }
@@ -28,20 +28,20 @@ void decrementTicks() {
   for(i = 0; i < sleeping; i++) {
     sleepingProcesses[current].tickQuantity--;
     if(sleepingProcesses[current].tickQuantity == 0) {
-      removeSleepingProcess(sleepingProcesses[current].pid);
+      removeSleepingProcess(sleepingProcesses[current].pid, sleepingProcesses[current].thread);
     }
     current = sleepingProcesses[current].next;
   }
 }
 
-int removeSleepingProcess(int pid) {
+int removeSleepingProcess(int pid, int thread) {
   int current = first;
   int previous = current;
   int i;
 
   for(i = 0; i < sleeping; i++) {
-    if(sleepingProcesses[current].pid == pid) {
-      changeProcessState(pid, READY);
+    if(sleepingProcesses[current].pid == pid && sleepingProcesses[current].thread == thread) {
+      changeThreadState(pid, thread, READY);
       sleepingProcesses[current].pid = NOT_USED;
       sleepingProcesses[previous].next = sleepingProcesses[current].next;
       sleeping--;
@@ -55,9 +55,10 @@ int removeSleepingProcess(int pid) {
   return SLEEPING_PROCESS_NOT_FOUND;
 }
 
-int addSleepingProcess(int pid, uint64_t tickQuantity) {
+int addSleepingProcess(int pid, int thread, uint64_t tickQuantity) {
   if(sleeping < MAX_SLEEPING_PROCESSES) {
     sleepingProcesses[firstAvailableSpace].pid = pid;
+    sleepingProcesses[firstAvailableSpace].thread = thread;
     sleepingProcesses[firstAvailableSpace].tickQuantity = tickQuantity;
     sleepingProcesses[firstAvailableSpace].next = first;
     first = firstAvailableSpace;

@@ -5,19 +5,17 @@
 #include <buddyMemoryAllocator.h>
 #include <types.h>
 
-#define PROCESS_INITIAL_PAGES 2
 #define MAX_NAME 50
-
-typedef enum {RUNNING, READY, BLOCKED, SLEEPING} processState;
+#define MAX_THREADS 32
+#define THREAD_LIMIT_REACHED -1
 
 typedef struct {
-    void * stack;
-    void * entryPoint;
-    void * memoryBase;
-    processState state;
+    //processState state;
     int pid;
     int ppid;
     char name[MAX_NAME];
+    threadNode_t threads[MAX_THREADS];
+    int currentThread;
 } process_t;
 
 //Source RowDaBoat Wyrm
@@ -52,10 +50,16 @@ typedef struct {
 
 process_t * createProcess(void * entryPoint, int argc, char * argv[], char * name);
 
+void initializeThreads(process_t * process);
+
 void deleteProcess(process_t * process);
 
 void callProcess(int argc, char * argv[], void * entryPoint);
 
 void * fillStackFrame(void * entryPoint, void * stack, int argc, char * argv[]);
+
+int addThread(process_t * process, thread_t * thread);
+
+int firstAvailableThreadSpace(process_t * process);
 
 #endif

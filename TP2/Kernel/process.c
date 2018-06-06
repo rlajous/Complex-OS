@@ -1,20 +1,22 @@
 #include <process.h>
 #include <scheduler.h>
+#include <threads.h>
 
 static int nextPid = 1;
 
 process_t * createProcess(void * entryPoint, int argc, char * argv[], char * name) {
-  int length = strlen(name);
-  void * aux = allocatePages(PROCESS_INITIAL_PAGES);
-  process_t * process = (process_t *)(aux + PROCESS_INITIAL_PAGES * PAGE_SIZE - 1 - sizeof(process_t));
+  size_t length = strlen(name);
+  process_t * process = allocateMemory(sizeof(process_t));
 
-  process->entryPoint = entryPoint;
   process->pid = nextPid++;
   process->ppid = getpid();
-  process->state = READY;
-  process->stack = (void *) (process);
-  process->stack = fillStackFrame(entryPoint, process->stack, argc, argv);
-  process->memoryBase = aux;
+
+  initializeThreads(process);
+  process->currentThread = 0;
+
+  process->threads[0].thread = createThread(argc, argv, entryPoint);
+  process->threads[0].next = 0;
+
   if(length < MAX_NAME) {
     memcpy(process->name, name, length);
     process->name[length] = '\0';
@@ -24,8 +26,17 @@ process_t * createProcess(void * entryPoint, int argc, char * argv[], char * nam
   return process;
 }
 
+void initializeThreads(process_t * process) {
+  int i;
+
+  for(i = 0 ; i < MAX_THREADS ; i++){
+    process->threads[i].thread = NULL;
+  }
+}
+
 void deleteProcess(process_t * process) {
-  freeMemory(process->memoryBase);
+  killThreads(process);
+  freeMemory(process);
 }
 
 void callProcess(int argc, char * argv[], void * entryPoint) {
@@ -36,7 +47,8 @@ void callProcess(int argc, char * argv[], void * entryPoint) {
     }
     freeMemory(argv);
   }
-  killCurrent();
+  process_t * process = getProcess(getpid());
+  terminateThread(process, process->currentThread);
   yield();
 }
 
@@ -68,4 +80,29 @@ void * fillStackFrame(void * entryPoint, void * stack, int argc, char * argv[]) 
   frame->base =	0x000;
 
   return frame;
+}
+
+int addThread(process_t * process, thread_t * thread) {
+  int next, current;
+  int index = firstAvailableThreadSpace(process);
+
+  if(index != THREAD_LIMIT_REACHED) {
+    current = process->currentThread;
+    process->threads[index].thread = thread;
+    next = process->threads[current].next;
+    process->threads[current].next = index;
+    process->threads[index].next = next;
+
+    return index;
+  }
+  return -1;
+}
+
+int firstAvailableThreadSpace(process_t * process) {
+  int i;
+  for(i = 0; i < MAX_THREADS; i++) {
+    if(process->threads[i].thread == NULL)
+      return i;
+  }
+  return THREAD_LIMIT_REACHED;
 }

@@ -1,5 +1,7 @@
 #include <sysCalls.h>
 #include <pipes.h>
+#include <process.h>
+#include <types.h>
 
 
 extern module_t modules[];
@@ -9,7 +11,7 @@ static sys sysCalls[SYSCALLS];
 int sysRead(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t noBlock) {
 	int index = 0;
 	if(!isForeground(getpid()) && fileDescriptor == 0) {
-		changeProcessState(getpid(), BLOCKED);
+		changeThreadState(getpid(), getCurrentThread(), BLOCKED);
 		yield();
 	}
 	if(fileDescriptor == 0) {
@@ -21,7 +23,7 @@ int sysRead(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t no
     }
 	}
 	else if(fileDescriptor > 2) {
-		readPipe((int)fileDescriptor, (char *)buffer, (int)size, getpid());
+		readPipe((int)fileDescriptor, (char *)buffer, (int)size, getpid(), getCurrentThread());
 	}
 	return 0;
 }
@@ -38,7 +40,7 @@ int sysWrite(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t r
 		}
 	}
 	else if(fileDescriptor > 2) {
-		writePipe((int)fileDescriptor, (char *)buffer, (int)size, getpid());
+		writePipe((int)fileDescriptor, (char *)buffer, (int)size, getpid(), getCurrentThread());
 	}
 	return 0;
 }
@@ -105,20 +107,20 @@ int sysFreeMemory(uint64_t address, uint64_t rdx, uint64_t rcx, uint64_t r8) {
 }
 
 int sysCreateMutex(uint64_t name, uint64_t rdx, uint64_t rcx, uint64_t r8) {
-	return getMutex((char *) name, getpid());
+	return getMutex((char *) name, getpid(), getCurrentThread());
 }
 
 int sysReleaseMutex(uint64_t mutex, uint64_t rdx, uint64_t rcx, uint64_t r8) {
-	return releaseMutex(getpid(), (int)mutex);
+	return releaseMutex(getpid(), (int)mutex, getCurrentThread());
 }
 
 int sysUpMutex(uint64_t mutex, uint64_t rdx, uint64_t rcx, uint64_t r8) {
-	mutexUp((int) mutex, getpid());
+	mutexUp((int) mutex, getpid(), getCurrentThread());
 	return 0;
 }
 
 int sysDownMutex(uint64_t mutex, uint64_t rdx, uint64_t rcx, uint64_t r8) {
-	mutexDown((int) mutex, getpid());
+	mutexDown((int) mutex, getpid(), getCurrentThread());
 	return 0;
 }
 
@@ -161,7 +163,8 @@ int sysRunProcess(uint64_t entryPoint, uint64_t argc, uint64_t argv, uint64_t ba
 	process_t * process = createProcess((void *) entryPoint, argc, (char **) argv, ((char **) argv)[0]);
 	ret = addProcess(process);
 	if(!background) {
-		changeProcessState(getForeground(), SLEEPING);
+		process_t * foreground = getProcess(getForeground());
+		changeThreadState(foreground->pid, foreground->currentThread, SLEEPING);
     setForeground(process->pid);
 	}
 	yield();
@@ -169,11 +172,11 @@ int sysRunProcess(uint64_t entryPoint, uint64_t argc, uint64_t argv, uint64_t ba
 }
 
 int sysCreateSemaphore(uint64_t name, uint64_t rdx, uint64_t rcx, uint64_t r8) {
-	return getSemaphore((char *) name, getpid());
+	return getSemaphore((char *) name, getpid(), getCurrentThread());
 }
 
 int sysReleaseSemaphre(uint64_t mutex, uint64_t rdx, uint64_t rcx, uint64_t r8) {
-	return releaseSemaphore(getpid(), (int)mutex);
+	return releaseSemaphore(getpid(), (int)mutex, getCurrentThread());
 }
 
 int sysSignal(uint64_t semaphore, uint64_t rdx, uint64_t rcx, uint64_t r8) {
@@ -182,12 +185,12 @@ int sysSignal(uint64_t semaphore, uint64_t rdx, uint64_t rcx, uint64_t r8) {
 }
 
 int sysWait(uint64_t semaphore, uint64_t rdx, uint64_t rcx, uint64_t r8) {
-	wait((int) semaphore, getpid());
+	wait((int) semaphore, getpid(), getCurrentThread());
 	return 0;
 }
 
 int sysSleep(uint64_t milliseconds, uint64_t rdx, uint64_t rcx, uint64_t r8) {
-  sleep(milliseconds, getpid());
+  sleep(milliseconds, getpid(), getCurrentThread());
   return 0;
 }
 
@@ -196,7 +199,24 @@ int sysOpenPipe(uint64_t name, uint64_t rdx, uint64_t rcx, uint64_t r8) {
 }
 
 int sysClosePipe(uint64_t pipe, uint64_t rdx, uint64_t rcx, uint64_t r8) {
-	return deletePipe((int)pipe, getpid());
+	return deletePipe((int)pipe, getpid(), getCurrentThread());
+}
+
+int sysAddThread(uint64_t entryPoint, uint64_t argc, uint64_t argv, uint64_t r8) {
+	argv = (uint64_t)backupArguments(argc, (char **)argv);
+	thread_t * thread = createThread((int)argc, (char **)argv, (void *)entryPoint);
+	return addThread(getProcess(getpid()), thread);
+}
+
+int sysKillThread(uint64_t thread, uint64_t rdx, uint64_t rcx, uint64_t r8) {
+	terminateThread(getProcess(getpid()), (int)thread);
+  yield();
+	return 0;
+}
+
+int sysJoinThread(uint64_t thread, uint64_t rdx, uint64_t rcx, uint64_t r8) {
+	joinThread(getProcess(getpid()), getCurrentThread(), (int)thread);
+	return 0;
 }
 
 int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8) {
@@ -241,6 +261,11 @@ void sysCallsSetup(){
 	sysCalls[26] = &sysWait;
 
   sysCalls[27] = &sysSleep;
+
   sysCalls[28] = &sysOpenPipe;
   sysCalls[29] = &sysClosePipe;
+
+	sysCalls[30] = &sysAddThread;
+	sysCalls[31] = &sysKillThread;
+	sysCalls[32] = &sysJoinThread;
 }

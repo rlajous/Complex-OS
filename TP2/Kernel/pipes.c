@@ -1,12 +1,11 @@
 #include <pipes.h>
-#include <scheduler.h>
-#include <semaphore.h>
-#include <lib.h>
+#include <types.h>
 
 static pipe_t pipes[MAX_PIPES];
 
 int createPipe(char * pipeName) {
   int pid = getpid();
+  int thread = getCurrentThread();
   int  i;
   char semWriteName[15] = "PIPE_WRITE_";
   char semReadName[15] = "PIPE_READ_";
@@ -18,7 +17,8 @@ int createPipe(char * pipeName) {
 
   for(i = 0; i < MAX_PIPES; i++) {
       if(pipes[i].used == FALSE) {
-        pipes[i].pid = pid;
+        pipes[i].creator.pid = pid;
+        pipes[i].creator.thread = thread;
         size_t nameLength = strlen(pipeName);
         memcpy(pipes[i].name, pipeName, nameLength);
         pipes[i].readIndex = 0;
@@ -26,16 +26,16 @@ int createPipe(char * pipeName) {
         pipes[i].used = TRUE;
 
         uintToBase(i, semWriteName + strlen(semWriteName), 10);
-        pipes[i].semWrite = createSemaphore(pid, semWriteName);
+        pipes[i].semWrite = createSemaphore(pid, semWriteName, thread);
         setValue(pipes[i].semWrite, PIPE_BUFFER_LENGTH);
 
         uintToBase(i, semReadName + strlen(semReadName), 10);
-        pipes[i].semRead = createSemaphore(pid, semReadName);
+        pipes[i].semRead = createSemaphore(pid, semReadName, thread);
 
         pipes[i].buffer = allocatePages(PIPE_PAGES);
 
         uintToBase(i, mutexName + strlen(mutexName), 10);
-        pipes[i].mutex = getMutex(mutexName, pid);
+        pipes[i].mutex = getMutex(mutexName, pid, thread);
 
         return i;
       }
@@ -52,7 +52,8 @@ void initializePipes() {
 
     p->readIndex = 0;
     p->writeIndex = 0;
-    p->pid = 0;
+    p->creator.pid = 0;
+    p->creator.thread = 0;
     p->used = FALSE;
   }
 }
@@ -69,7 +70,7 @@ int getPipe(char * pipeName) {
   return createPipe(pipeName) + 3;
 }
 
-int writePipe(int pipe, char * message, int bytes, int pid) {
+int writePipe(int pipe, char * message, int bytes, int pid, int thread) {
   pipe = pipe - 3;
   pipe_t * p;
   int i = 0;
@@ -80,8 +81,8 @@ int writePipe(int pipe, char * message, int bytes, int pid) {
   p = &pipes[pipe];
 
   while(bytes != 0) {
-    wait(p->semWrite, pid);
-    mutexDown(p->mutex, pid);
+    wait(p->semWrite, pid, thread);
+    mutexDown(p->mutex, pid, thread);
     p->buffer[p->writeIndex] = message[i++];
     bytes--;
     if(p->writeIndex == PIPE_BUFFER_LENGTH) {
@@ -90,13 +91,13 @@ int writePipe(int pipe, char * message, int bytes, int pid) {
       p->writeIndex++;
     }
 
-    mutexUp(p->mutex, pid);
+    mutexUp(p->mutex, pid, thread);
     signal(p->semRead);
   }
   return 0;
 }
 
-int readPipe(int pipe, char * buffer, int bytes, int pid) {
+int readPipe(int pipe, char * buffer, int bytes, int pid, int thread) {
   pipe = pipe - 3;
 
   pipe_t * p;
@@ -108,8 +109,8 @@ int readPipe(int pipe, char * buffer, int bytes, int pid) {
   p = &pipes[pipe];
 
   while(bytes != 0) {
-    wait(p->semRead, pid);
-    mutexDown(p->mutex, pid);
+    wait(p->semRead, pid, thread);
+    mutexDown(p->mutex, pid, thread);
 
     buffer[i++] = p->buffer[p->readIndex];
 
@@ -121,13 +122,13 @@ int readPipe(int pipe, char * buffer, int bytes, int pid) {
         p->readIndex++;
     }
 
-    mutexUp(p->mutex, pid);
+    mutexUp(p->mutex, pid, thread);
     signal(p->semWrite);
   }
   return 0;
 }
 
-int deletePipe(int pipe, int pid) {
+int deletePipe(int pipe, int pid, int thread) {
 
   pipe_t * p;
 
@@ -137,11 +138,11 @@ int deletePipe(int pipe, int pid) {
 
   p = &pipes[pipe];
 
-  if(p->pid == pid){
+  if(p->creator.pid == pid && p->creator.thread == thread){
     freeMemory(p->buffer);
-    releaseMutex(p->pid, p->mutex);
-    releaseSemaphore(p->pid, p->semWrite);
-    releaseSemaphore(p->pid, p->semRead);
+    releaseMutex(p->creator.pid, p->mutex, p->creator.thread);
+    releaseSemaphore(p->creator.pid, p->semWrite, p->creator.thread);
+    releaseSemaphore(p->creator.pid, p->semRead, p->creator.thread);
     p->used = FALSE;
 
     return 0;

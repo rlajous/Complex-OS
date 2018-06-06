@@ -1,10 +1,11 @@
 #include <channel.h>
+#include <process.h>
 
 static channelNode_t* firstChannel = NULL;
 static int channelMutex;
 
 void initializeChannels() {
-	channelMutex = createMutex(0, "_CHANNEL_MUTEX_");
+	channelMutex = createMutex(0, "_CHANNEL_MUTEX_", 0);
 }
 
 channelNode_t* getChannelFromList(int recipientPid, int senderPid) {
@@ -43,7 +44,9 @@ void addChannelToList(channelNode_t* newChannel) {
 
  void removeChannelFromList(channelNode_t* channel) {
 	int pid = getpid();
-	mutexDown(channelMutex, pid);
+	int thread = getCurrentThread();
+
+	mutexDown(channelMutex, pid, thread);
 
 	channelNode_t * current;
 	channelNode_t * previous;
@@ -65,7 +68,7 @@ void addChannelToList(channelNode_t* newChannel) {
 		deleteChannel(current);
 	}
 
-	mutexUp(channelMutex, pid);
+	mutexUp(channelMutex, pid, thread);
  }
 
 messageNode_t* addMessageToList(messageNode_t* newMessage, messageNode_t* listHead) {
@@ -114,9 +117,10 @@ messageNode_t* getNextMessageForPid(channelNode_t* channel, int pid){
 }
 
 channelNode_t * createChannel(int senderPid, int recipientPid){
-	int i;
+	//int i;
+	int thread = getCurrentThread();
 
-	mutexDown(channelMutex, senderPid);
+	mutexDown(channelMutex, senderPid, thread);
 
   channelNode_t* newChannel = getChannelFromList(senderPid, recipientPid);
   if(newChannel != NULL)
@@ -136,23 +140,25 @@ channelNode_t * createChannel(int senderPid, int recipientPid){
 
     generateChannelMutexName(senderPid, recipientPid, senderMutexName, 1);
     generateChannelMutexName(recipientPid, senderPid, recipientMutexName, 1);
-    newChannel->senderSendSem = createSemaphore(senderPid, senderMutexName);
-		newChannel->recipientSendSem = createSemaphore(senderPid, recipientMutexName);
+    newChannel->senderSendSem = createSemaphore(senderPid, senderMutexName, 0);
+		newChannel->recipientSendSem = createSemaphore(senderPid, recipientMutexName, 0);
 
 		generateChannelMutexName(senderPid, recipientPid, senderMutexName, 0);
 		generateChannelMutexName(recipientPid, senderPid, recipientMutexName, 0);
-		newChannel->senderReceiveSem = createSemaphore(senderPid, senderMutexName);
-		newChannel->recipientReceiveSem = createSemaphore(senderPid, recipientMutexName);
+		newChannel->senderReceiveSem = createSemaphore(senderPid, senderMutexName, 0);
+		newChannel->recipientReceiveSem = createSemaphore(senderPid, recipientMutexName, 0);
 
-		for(i = 0; i < MAX_MESSAGES; i++) {
+		/*for(i = 0; i < MAX_MESSAGES; i++) {
 			signal(newChannel->senderSendSem);
 			signal(newChannel->recipientSendSem);
-		}
+		}*/
+		setValue(newChannel->senderSendSem, MAX_MESSAGES - 1);
+		setValue(newChannel->recipientSendSem, MAX_MESSAGES - 1);
 
     addChannelToList(newChannel);
   }
 
-	mutexUp(channelMutex, senderPid);
+	mutexUp(channelMutex, senderPid, thread);
 	return newChannel;
 }
 
@@ -174,10 +180,10 @@ void deleteChannel(channelNode_t * channel) {
   removeChannelFromList(channel);
 	deleteMessages(channel->recipientToSender);
 	deleteMessages(channel->senderToRecipient);
-	releaseSemaphore(channel->senderPid, channel->senderReceiveSem);
-	releaseSemaphore(channel->recipientPid, channel->recipientReceiveSem);
-	releaseSemaphore(channel->senderPid, channel->senderSendSem);
-	releaseSemaphore(channel->recipientPid, channel->recipientReceiveSem);
+	releaseSemaphore(channel->senderPid, channel->senderReceiveSem, 0);
+	releaseSemaphore(channel->recipientPid, channel->recipientReceiveSem, 0);
+	releaseSemaphore(channel->senderPid, channel->senderSendSem , 0);
+	releaseSemaphore(channel->recipientPid, channel->recipientReceiveSem, 0);
 	freeMemory(channel);
 }
 
@@ -198,6 +204,7 @@ messageNode_t * deleteMessage(messageNode_t * start) {
 
 int sendMessage(int recipientPid, char* message, int length) {
 	int senderPid = getpid();
+	int thread = getCurrentThread();
 	messageNode_t* newMessage;
 	channelNode_t* channel = NULL;
 	newMessage = allocateMemory(sizeof(messageNode_t));
@@ -210,7 +217,7 @@ int sendMessage(int recipientPid, char* message, int length) {
 		channel = getChannelFromList(recipientPid, senderPid);
 
 		if (channel != NULL) {
-			lockSend(senderPid, channel);
+			lockSend(senderPid, channel, thread);
 			addMessageToChannel(newMessage,channel,recipientPid, senderPid);
 
 			unlockReceive(senderPid, channel);
@@ -224,12 +231,13 @@ int sendMessage(int recipientPid, char* message, int length) {
 
 char * receiveMessage(int pid, int length) {
 	int recipientPid = getpid();
+	int thread = getCurrentThread();
 	int resultLength;
 	messageNode_t *message;
 	char * result = NULL;
 	channelNode_t* channel = getChannelFromList(recipientPid, pid);
 	if(channel != NULL) {
-		lockReceive(recipientPid, channel);
+		lockReceive(recipientPid, channel, thread);
 		message = getNextMessageForPid(channel, recipientPid);
 
 		resultLength = length > message->length ? message->length: length;
@@ -253,7 +261,7 @@ void unlockReceive(int senderPid, channelNode_t * channel) {
 	signal(semaphore);
 }
 
-void lockReceive(int recipientPid, channelNode_t * channel) {
+void lockReceive(int recipientPid, channelNode_t * channel, int thread) {
 	int semaphore;
 
 	if(channel->recipientPid == recipientPid)
@@ -261,7 +269,7 @@ void lockReceive(int recipientPid, channelNode_t * channel) {
 	else
 		semaphore = channel->senderReceiveSem;
 
-	wait(semaphore, recipientPid);
+	wait(semaphore, recipientPid, thread);
 }
 
 void unlockSend(int recipientPid, channelNode_t * channel) {
@@ -275,7 +283,7 @@ void unlockSend(int recipientPid, channelNode_t * channel) {
 	signal(semaphore);
 }
 
-void lockSend(int senderPid, channelNode_t * channel) {
+void lockSend(int senderPid, channelNode_t * channel, int thread) {
 	int semaphore;
 
 	if(channel->senderPid == senderPid)
@@ -283,7 +291,7 @@ void lockSend(int senderPid, channelNode_t * channel) {
 	else
 		semaphore = channel->recipientSendSem;
 
-	wait(semaphore, senderPid);
+	wait(semaphore, senderPid, thread);
 }
 
 

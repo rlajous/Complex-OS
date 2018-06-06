@@ -63,10 +63,10 @@ char * receiveMessage(int pid, int length);
 
 void unlockReceive(int senderPid, channelNode_t * channel);
 
-void lockReceive(int recipientPid, channelNode_t * channel);
+void lockReceive(int recipientPid, channelNode_t * channel, int thread);
 
 void unlockSend(int recipientPid, channelNode_t * channel);
 
-void lockSend(int senderPid, channelNode_t * channel);
+void lockSend(int senderPid, channelNode_t * channel, int thread);
 
 #endif

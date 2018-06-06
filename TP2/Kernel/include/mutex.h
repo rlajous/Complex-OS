@@ -14,38 +14,40 @@
 #define UNLOCKED 1
 
 typedef struct {
-    int pid;
-    int lockPid;
+    threadId_t creator;
+    threadId_t lockProcess;
     char name[MAX_NAME];
-    int blocked[MAX_BLOCKED];
+    threadId_t blocked[MAX_BLOCKED];
     int blockedQuantity;
     int value;
 } mutex_t;
 
 void setupMutexSystem();
 
-int getMutex(char * name, int pid);
+int getMutex(char * name, int pid, int thread);
 
-int createMutex(int pid, char * name);
+int createMutex(int pid, char * name, int thread);
 
-int releaseMutex(int pid, int mutex);
+int releaseMutex(int pid, int mutex, int thread);
 
 int getNextMutexAvailable();
 
 void clearMutex(int mutex);
 
-int nextListIndexAvailable(int * list, int length);
+int nextListIndexAvailable(threadId_t * list, int length);
 
-int addToBlocked(int mutex, int pid);
+int addToBlocked(int mutex, int pid, int thread);
 
 int isValidMutex(int mutex);
 
-void mutexDown(int mutex, int pid);
+void mutexDown(int mutex, int pid, int thread);
 
-void mutexUp(int mutex, int pid);
+void mutexUp(int mutex, int pid, int thread);
 
 int unlockProcess(int mutex);
 
-void removePidFromMutexes(int pid);
+void removePidFromMutexes(int pid, int thread);
+
+void removeThreadFromMutexes(int pid, int thread);
 
 #endif
