@@ -16,6 +16,7 @@ typedef struct {
     char name[MAX_NAME];
     threadNode_t threads[MAX_THREADS];
     int currentThread;
+    int standardPipes[2];
 } process_t;
 
 //Source RowDaBoat Wyrm

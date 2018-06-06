@@ -12,6 +12,7 @@ static const char * man =
 \t threadTest&: Tests thread addition (Afterwards run ps)\n\
 \t kill: Kills pid sent as argument\n\
 \t snek: Snake game\n\
+\t time|shellPipe: Tests shell pipe, second process will print first output\n\
 \t help: Prints all commands and uses\n\
 \t cmd&: Executes command in background\n\
 \t echo: Prints what you send as arguments\n\

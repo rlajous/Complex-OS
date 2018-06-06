@@ -55,3 +55,7 @@ int openPipe(char * name) {
 int closePipe(int pipe) {
   return int80(29, (uint64_t) pipe, 0, 0, 0);
 }
+
+int shellPipe(char * filename, int argc, char * argv[], int isWriter) {
+  return int80(33, (uint64_t) filename, argc, (uint64_t) argv, (uint64_t) isWriter);
+}

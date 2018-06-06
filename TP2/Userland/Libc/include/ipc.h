@@ -31,4 +31,6 @@ int openPipe(char * name);
 
 int closePipe(int pipe);
 
+int shellPipe(char * filename, int argc, char * argv[], int isWriter);
+
 #endif

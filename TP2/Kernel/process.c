@@ -10,6 +10,8 @@ process_t * createProcess(void * entryPoint, int argc, char * argv[], char * nam
 
   process->pid = nextPid++;
   process->ppid = getpid();
+  process->standardPipes[0] = -1;
+  process->standardPipes[1] = -1;
 
   initializeThreads(process);
   process->currentThread = 0;

@@ -10,6 +10,13 @@ static sys sysCalls[SYSCALLS];
 
 int sysRead(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t noBlock) {
 	int index = 0;
+	int pipe = getProcess(getpid())->standardPipes[0];
+
+  if(fileDescriptor > 2 || pipe != -1) {
+    readPipe(pipe == -1? (int)fileDescriptor: pipe, (char *)buffer, (int)size, getpid(), getCurrentThread());
+    return 0;
+  }
+
 	if(!isForeground(getpid()) && fileDescriptor == 0) {
 		changeThreadState(getpid(), getCurrentThread(), BLOCKED);
 		yield();
@@ -22,14 +29,13 @@ int sysRead(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t no
         *((char *) buffer++) = readBuffer();
     }
 	}
-	else if(fileDescriptor > 2) {
-		readPipe((int)fileDescriptor, (char *)buffer, (int)size, getpid(), getCurrentThread());
-	}
+
 	return 0;
 }
 
 int sysWrite(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t r8) {
-	if(fileDescriptor == 1 || fileDescriptor == 2) {
+  int pipe = getProcess(getpid())->standardPipes[1];
+	if((fileDescriptor == 1 || fileDescriptor == 2) && pipe == -1) {
 		char next;
 		while(size--) {
 			next = *(char *)(buffer++);
@@ -39,8 +45,8 @@ int sysWrite(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t r
 				printcWithStyle(next, 0x04);
 		}
 	}
-	else if(fileDescriptor > 2) {
-		writePipe((int)fileDescriptor, (char *)buffer, (int)size, getpid(), getCurrentThread());
+	else {
+		writePipe(pipe == -1? (int)fileDescriptor: pipe, (char *)buffer, (int)size, getpid(), getCurrentThread());
 	}
 	return 0;
 }
@@ -219,6 +225,33 @@ int sysJoinThread(uint64_t thread, uint64_t rdx, uint64_t rcx, uint64_t r8) {
 	return 0;
 }
 
+int sysPipeStd(uint64_t filename, uint64_t argc, uint64_t argv, uint64_t isWriter) {
+	void * address = getModuleAddress((char*)filename);
+	int pipe;
+	int ret;
+	if(address == NULL)
+		return -1;
+
+	argv = (uint64_t)backupArguments(argc, (char **)argv);
+	process_t * process = createProcess(address, argc, (char **) argv, ((char **) argv)[0]);
+	ret = addProcess(process);
+
+	process_t * foreground = getProcess(getForeground());
+	changeThreadState(foreground->pid, foreground->currentThread, SLEEPING);
+	setForeground(process->pid);
+
+	pipe = getPipe("ShellPipe");
+	if(isWriter)
+		process->standardPipes[1] = pipe;
+	else
+		process->standardPipes[0] = pipe;
+
+	yield();
+	return ret;
+
+
+}
+
 int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8) {
 	if(rdi >= SYSCALLS)
 		return -1;
@@ -268,4 +301,6 @@ void sysCallsSetup(){
 	sysCalls[30] = &sysAddThread;
 	sysCalls[31] = &sysKillThread;
 	sysCalls[32] = &sysJoinThread;
+
+	sysCalls[33] = &sysPipeStd;
 }
