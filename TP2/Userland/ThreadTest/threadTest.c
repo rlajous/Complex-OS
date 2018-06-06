@@ -24,6 +24,6 @@ int threadFun(int argc, char *argv[]) {
   int num;
   parseInt(argv[0], &num);
   printf("Thread %d\n", num);
-	//while(1);
+	while(1);
 	return 0;
 }
