@@ -12,7 +12,7 @@
 #include <channel.h>
 #include <timer.h>
 
-#define SYSCALLS 28
+#define SYSCALLS 29
 
 typedef int (*sys)(uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
@@ -67,6 +67,10 @@ int sysReleaseSemaphre(uint64_t mutex, uint64_t rdx, uint64_t rcx, uint64_t r8);
 int sysSignal(uint64_t semaphore, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
 int sysWait(uint64_t semaphore, uint64_t rdx, uint64_t rcx, uint64_t r8);
+
+int sysOpenPipe(uint64_t name, uint64_t rdx, uint64_t rcx, uint64_t r8);
+
+int sysClosePipe(uint64_t pipe, uint64_t rdx, uint64_t rcx, uint64_t r8);
 
 int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8);
 

@@ -1,4 +1,5 @@
 #include <sysCalls.h>
+#include <pipes.h>
 
 
 extern module_t modules[];
@@ -7,7 +8,7 @@ static sys sysCalls[SYSCALLS];
 
 int sysRead(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t noBlock) {
 	int index = 0;
-	if(!isForeground(getpid())) {
+	if(!isForeground(getpid()) && fileDescriptor == 0) {
 		changeProcessState(getpid(), BLOCKED);
 		yield();
 	}
@@ -18,6 +19,9 @@ int sysRead(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t no
 		  else
         *((char *) buffer++) = readBuffer();
     }
+	}
+	else if(fileDescriptor > 2) {
+		readPipe((int)fileDescriptor, (char *)buffer, (int)size, getpid());
 	}
 	return 0;
 }
@@ -32,6 +36,9 @@ int sysWrite(uint64_t fileDescriptor, uint64_t buffer, uint64_t size, uint64_t r
 			else
 				printcWithStyle(next, 0x04);
 		}
+	}
+	else if(fileDescriptor > 2) {
+		writePipe((int)fileDescriptor, (char *)buffer, (int)size, getpid());
 	}
 	return 0;
 }
@@ -184,6 +191,14 @@ int sysSleep(uint64_t milliseconds, uint64_t rdx, uint64_t rcx, uint64_t r8) {
   return 0;
 }
 
+int sysOpenPipe(uint64_t name, uint64_t rdx, uint64_t rcx, uint64_t r8) {
+	return getPipe((char *)name);
+}
+
+int sysClosePipe(uint64_t pipe, uint64_t rdx, uint64_t rcx, uint64_t r8) {
+	return deletePipe((int)pipe, getpid());
+}
+
 int sysCallHandler(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8) {
 	if(rdi >= SYSCALLS)
 		return -1;
@@ -226,4 +241,6 @@ void sysCallsSetup(){
 	sysCalls[26] = &sysWait;
 
   sysCalls[27] = &sysSleep;
+  sysCalls[28] = &sysOpenPipe;
+  sysCalls[29] = &sysClosePipe;
 }

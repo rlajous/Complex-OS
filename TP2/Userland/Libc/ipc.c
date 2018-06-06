@@ -47,3 +47,11 @@ void signal(int semaphore) {
 void wait(int semaphore) {
   int80(26, (uint64_t) semaphore, 0, 0, 0);
 }
+
+int openPipe(char * name) {
+  return int80(28, (uint64_t) name, 0, 0, 0);
+}
+
+int closePipe(int pipe) {
+  return int80(29, (uint64_t) pipe, 0, 0, 0);
+}

@@ -27,4 +27,8 @@ void signal(int semaphore);
 
 void wait(int semaphore);
 
+int openPipe(char * name);
+
+int closePipe(int pipe);
+
 #endif

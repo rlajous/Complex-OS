@@ -130,7 +130,6 @@ void wait(int semaphore, int pid) {
   if(isValidSemaphore(semaphore)) {
 
     mutexDown(semaphores[semaphore].mutex, pid);
-
     semaphores[semaphore].value--;
 
     if(semaphores[semaphore].value < 0) {
@@ -182,6 +181,16 @@ int unlockSemaphoreProcess(int semaphore) {
   }
 
   return unlocked;
+}
+
+void setValue(int semaphore, int value) {
+  int pid = getpid();
+
+  if(isValidSemaphore(semaphore)) {
+    mutexDown(semaphores[semaphore].mutex, pid);
+    semaphores[semaphore].value = value;
+    mutexUp(semaphores[semaphore].mutex, pid);
+  }
 }
 
 void removePidFromSemaphores(int pid) {

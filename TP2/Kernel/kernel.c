@@ -12,6 +12,7 @@
 #include <semaphore.h>
 #include <timer.h>
 #include <channel.h>
+#include <pipes.h>
 
 int main(void) {
 	clearScreen();
@@ -21,6 +22,7 @@ int main(void) {
 	initializeTimer();
 	setupSemaphoreSystem();
 	initializeChannels();
+	initializePipes();
 
 	setupIDT();
 

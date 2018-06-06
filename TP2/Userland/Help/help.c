@@ -7,6 +7,7 @@ date: Prints out the current date\n\
 clear: Wipes out the screen\n\
 ps: Prints processes\n\
 prodcons: Shows producer-consumer problem\n\
+pipeProdcons: Shows producer-consumer problem solved with pipes\n\
 messageTest: Tests interprocess communication\n\
 kill: Kills pid sent as argument\n\
 snek: Snake game\n\
