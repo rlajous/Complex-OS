@@ -7,6 +7,6 @@
 *.sys
 *.out
 
-TP2/cmake-build-debug/
+*/cmake-build-debug/
 
-TP2/CMakeLists\.txt
+*/CMakeLists\.txt

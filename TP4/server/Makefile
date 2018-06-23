@@ -1,0 +1,23 @@
+include ../Makefile.inc
+
+SERVER_SOURCES = server.c
+DB_SOURCES = database.c
+SQLITE3_SOURCES = sqlite3.c
+SQLITE3 = sqlite3.o
+DATABASE = database.o
+
+all: $(DATABASE) $(SERVER)
+
+$(SERVER): $(SERVER_SOURCES) $(DATABASE) $(SQLITE3)
+	$(COMPILER) $(CFLAGS) $(SERVER_SOURCES) $(DATABASE) $(SQLITE3) -o $(SERVER) $(DBFLAGS)
+
+$(DATABASE): $(DB_SOURCES)
+	$(COMPILER) $(CFLAGS) -c $(DB_SOURCES) -o $(DATABASE)
+
+$(SQLITE3): $(SQLITE3_SOURCES)
+	$(COMPILER) $(CFLAGS) -c $(SQLITE3_SOURCES) -o $(SQLITE3)
+
+clean:
+	rm -rf *.o
+
+.PHONY: all clean
